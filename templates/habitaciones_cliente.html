@@ -1,0 +1,366 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Nuestras habitaciones | Hotel Taroa{% endblock %}
+
+{% block content %}
+
+<style>
+.catalogo-habitaciones {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 45px 22px 65px;
+    color: #49372b;
+}
+
+.portada-habitaciones {
+    text-align: center;
+    padding: 45px 20px;
+    background: linear-gradient(135deg, #fdf4ec, #f2d5bd);
+    border-radius: 18px;
+    margin-bottom: 35px;
+}
+
+.portada-habitaciones .etiqueta {
+    color: #b96f3c;
+    font-weight: bold;
+    letter-spacing: 3px;
+    font-size: 12px;
+}
+
+.portada-habitaciones h1 {
+    font-size: clamp(30px, 5vw, 44px);
+    margin: 15px 0;
+}
+
+.portada-habitaciones p {
+    max-width: 650px;
+    margin: 0 auto;
+    line-height: 1.8;
+}
+
+.filtros-habitaciones {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    align-items: end;
+    padding: 22px;
+    background: white;
+    border: 1px solid #ead8c8;
+    border-radius: 14px;
+    margin-bottom: 38px;
+}
+
+.filtros-habitaciones label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.filtros-habitaciones input,
+.filtros-habitaciones select {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #dfc8b5;
+    border-radius: 8px;
+    background: #fffdfa;
+    font: inherit;
+}
+
+.boton-habitacion {
+    display: inline-block;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: center;
+    text-decoration: none;
+    border: none;
+    border-radius: 8px;
+    padding: 13px 16px;
+    background: #c98250;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background .2s;
+}
+
+.boton-habitacion:hover {
+    background: #a96336;
+}
+
+.titulo-catalogo {
+    margin: 0 0 8px;
+    font-size: 28px;
+}
+
+.descripcion-catalogo {
+    margin: 0 0 25px;
+    color: #78685c;
+}
+
+.rejilla-habitaciones {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 25px;
+}
+
+.tarjeta-habitacion {
+    overflow: hidden;
+    border-radius: 15px;
+    background: white;
+    border: 1px solid #eadfd5;
+    box-shadow: 0 5px 20px rgba(83, 55, 32, .07);
+    transition: transform .2s, box-shadow .2s;
+}
+
+.tarjeta-habitacion:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 28px rgba(83, 55, 32, .13);
+}
+
+.imagen-habitacion {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: block;
+    background: #f2e2d5;
+}
+
+.info-habitacion {
+    padding: 22px;
+}
+
+.disponibilidad-habitacion {
+    display: inline-block;
+    color: #34724b;
+    background: #e8f5eb;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.info-habitacion h3 {
+    font-size: 22px;
+    margin: 14px 0 8px;
+}
+
+.detalle-habitacion {
+    color: #78685c;
+    line-height: 1.9;
+    font-size: 14px;
+}
+
+.precio-habitacion {
+    color: #b96f3c;
+    font-size: 25px;
+    font-weight: bold;
+    margin: 18px 0;
+}
+
+.precio-habitacion small {
+    font-size: 13px;
+    color: #78685c;
+    font-weight: normal;
+}
+
+.mensaje-sin-habitaciones {
+    text-align: center;
+    padding: 35px 20px;
+    border: 1px dashed #d8b99f;
+    background: #fffaf5;
+    border-radius: 14px;
+    grid-column: 1 / -1;
+}
+
+.enlaces-cliente {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 22px;
+    margin-top: 35px;
+}
+
+.enlaces-cliente a {
+    color: #b96f3c;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+@media (max-width: 600px) {
+    .catalogo-habitaciones {
+        padding: 25px 14px 40px;
+    }
+
+    .portada-habitaciones {
+        padding: 30px 15px;
+    }
+}
+</style>
+
+<section class="catalogo-habitaciones">
+
+    <header class="portada-habitaciones">
+        <span class="etiqueta">
+            {{ alojamiento.nombre|default:"HOTEL TAROA"|upper }} · LA GUAJIRA
+        </span>
+        <h1>Encuentra tu lugar ideal para descansar</h1>
+        <p>
+            {{ alojamiento.descripcion|default:"Descubre nuestras habitaciones, disfruta de la comodidad y vive una experiencia inolvidable en Riohacha." }}
+        </p>
+    </header>
+
+    {% if alojamiento %}
+    <section class="bienvenida">
+        <h2>Conoce {{ alojamiento.nombre }}</h2>
+        <p>{{ alojamiento.municipio }}, La Guajira · {{ alojamiento.direccion }}</p>
+        {% if alojamiento.foto %}
+            <img class="imagen-habitacion" src="{{ alojamiento.foto.url }}" alt="Fotografía de {{ alojamiento.nombre }}" loading="lazy">
+        {% else %}
+            <img class="imagen-habitacion" src="{% static 'img/hotel-taroa-costa.jpg' %}" alt="Fotografía de {{ alojamiento.nombre }}" loading="lazy">
+        {% endif %}
+        {% if alojamiento.servicios_disponibles.all %}
+            <p><strong>Servicios:</strong>
+                {% for servicio in alojamiento.servicios_disponibles.all %}
+                    {{ servicio.nombre }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </p>
+        {% endif %}
+        {% if alojamiento.sitios_turisticos %}
+            <h3>Sitios turísticos cercanos</h3>
+            <ul>
+                {% for sitio in sitios_turisticos %}
+                    {% if sitio %}<li>{{ sitio }}</li>{% endif %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+    {% endif %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="mensaje-login {{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="GET" class="filtros-habitaciones">
+        <div>
+            <label for="entrada">Fecha de entrada</label>
+            <input type="date" id="entrada" name="entrada"
+                   value="{{ entrada }}" min="{{ fecha_minima }}" required>
+        </div>
+
+        <div>
+            <label for="salida">Fecha de salida</label>
+            <input type="date" id="salida" name="salida"
+                   value="{{ salida }}" min="{{ fecha_minima }}" required>
+        </div>
+
+        <div>
+            <label for="cantidad">Número de huéspedes</label>
+            <input type="number" id="cantidad" name="cantidad"
+                   min="1" value="{{ cantidad|default:'1' }}" required>
+        </div>
+
+        <button type="submit" class="boton-habitacion">
+            Buscar disponibilidad
+        </button>
+    </form>
+
+    <h2 class="titulo-catalogo">Nuestras habitaciones</h2>
+    <p class="descripcion-catalogo">
+        Consulta las opciones y busca por fechas para confirmar cuáles están disponibles para tu estadía.
+    </p>
+
+    <div class="rejilla-habitaciones">
+        {% for habitacion in habitaciones %}
+            <article class="tarjeta-habitacion">
+
+                {% if habitacion.foto %}
+                    <img class="imagen-habitacion"
+                         src="{{ habitacion.foto.url }}"
+                         alt="Habitación {{ habitacion.numero }} - {{ habitacion.tipo.nombre }}"
+                         loading="lazy">
+                {% elif forloop.counter|divisibleby:3 %}
+                    <img class="imagen-habitacion"
+                         src="{% static 'img/habitacion-clasica.jpg' %}"
+                         alt="Habitación {{ habitacion.numero }} - {{ habitacion.tipo.nombre }}"
+                         loading="lazy">
+                {% elif forloop.counter|divisibleby:2 %}
+                    <img class="imagen-habitacion"
+                         src="{% static 'img/habitacion-moderna.jpg' %}"
+                         alt="Habitación {{ habitacion.numero }} - {{ habitacion.tipo.nombre }}"
+                         loading="lazy">
+                {% else %}
+                    <img class="imagen-habitacion"
+                         src="{% static 'img/habitacion-moderna.jpg' %}"
+                         alt="Habitación {{ habitacion.numero }} - {{ habitacion.tipo.nombre }}"
+                         loading="lazy">
+                {% endif %}
+
+                <div class="info-habitacion">
+                    <span class="disponibilidad-habitacion">
+                        {% if entrada and salida %}Disponible para estas fechas{% else %}Consulta disponibilidad por fechas{% endif %}
+                    </span>
+
+                    <h3>Habitación {{ habitacion.numero }}</h3>
+
+                    <div class="detalle-habitacion">
+                        <div>
+                            <strong>Tipo:</strong>
+                            {{ habitacion.tipo.nombre }}
+                        </div>
+                        <div>
+                            <strong>Capacidad:</strong>
+                            {{ habitacion.tipo.capacidad }} huéspedes
+                        </div>
+                        <div>
+                            <strong>Piso:</strong>
+                            {{ habitacion.piso }}
+                        </div>
+                        <div>
+                            <strong>Alojamiento:</strong>
+                            {{ habitacion.alojamiento.nombre }}
+                        </div>
+                    </div>
+                    {% if habitacion.tipo.descripcion %}
+                        <p class="descripcion-tipo-habitacion">
+                            {{ habitacion.tipo.descripcion }}
+                        </p>
+                    {% endif %}
+
+                    <p class="precio-habitacion">
+                        ${{ habitacion.precio }}
+                        <small>por noche</small>
+                    </p>
+
+                    <a class="boton-habitacion"
+                       href="{% url 'reserva_cliente' %}?habitacion={{ habitacion.id }}&fecha_entrada={{ entrada }}&fecha_salida={{ salida }}&cantidad_huespedes={{ cantidad|default:'1' }}">
+                        Reservar habitación
+                    </a>
+                </div>
+            </article>
+        {% empty %}
+            <div class="mensaje-sin-habitaciones">
+                {% if hay_habitaciones_registradas %}
+                    <h3>No hay habitaciones disponibles para mostrar</h3>
+                    <p>Prueba con otras fechas o vuelve más tarde para consultar nuevas opciones.</p>
+                {% else %}
+                    <h3>Pronto tendremos habitaciones disponibles</h3>
+                    <p>El alojamiento todavía no ha registrado habitaciones para reservar.</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <nav class="enlaces-cliente">
+        <a href="{% url 'mis_reservas' %}">Mis reservas</a>
+        <a href="{% url 'historial_reservas' %}">Historial de reservas</a>
+        <a href="{% url 'inicio' %}">Volver al inicio</a>
+    </nav>
+
+</section>
+
+{% endblock %}

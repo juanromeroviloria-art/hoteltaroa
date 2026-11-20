@@ -1,0 +1,127 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios | Hotel Taroa</title>
+    <link rel="stylesheet" href="{% static 'css/usuarios.css' %}">
+</head>
+<body>
+<div class="pagina">
+
+    <header class="encabezado">
+        <div>
+            <span class="marca">HOTEL TAROA</span>
+            <p>GESTIÓN HOTELERA · RIOHACHA</p>
+        </div>
+        <a class="volver" href="{% url 'panel' %}">← Volver al panel</a>
+    </header>
+
+    <main>
+        <section class="presentacion">
+            <span class="etiqueta">ADMINISTRACIÓN</span>
+            <h1>Gestión de usuarios</h1>
+            <p>Crea, consulta y administra las cuentas de acceso al sistema.</p>
+        </section>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mensaje">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <section class="contenido">
+            <div class="titulo-lista">
+                <div>
+                    <h2>Usuarios registrados</h2>
+                    <p>Contraseñas protegidas por el sistema.</p>
+                </div>
+                <a class="boton" href="{% url 'usuario_crear' %}">
+                    + Crear usuario
+                </a>
+            </div>
+
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuario</th>
+                            <th>Nombre completo</th>
+                            <th>Correo</th>
+                            <th>Estado</th>
+                            <th>Tipo de cuenta</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td>{{ usuario.username }}</td>
+                            <td>{{ usuario.get_full_name|default:"Sin nombre" }}</td>
+                            <td>{{ usuario.email|default:"Sin correo" }}</td>
+                            <td>
+                                {% if usuario.is_active %}
+                                    <span class="estado activo">Activo</span>
+                                {% else %}
+                                    <span class="estado inactivo">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                       {% if usuario.is_superuser %}
+                           Superadministrador
+                     {% elif usuario.usuario.rol %}
+                    {{ usuario.usuario.rol.nombre }}
+                     {% else %}
+                         Sin rol asignado
+                       {% endif %}
+                       </td>
+                            <td class="acciones">
+                                <a class="accion editar"
+                                   href="{% url 'usuario_editar' usuario.id %}">
+                                    Editar
+                                </a>
+
+                                {% if usuario.id != request.user.id %}
+                                <form method="post"
+                                      action="{% url 'usuario_estado' usuario.id %}">
+                                    {% csrf_token %}
+                                    <button class="accion estado-boton" type="submit">
+                                        {% if usuario.is_active %}
+                                            Desactivar
+                                        {% else %}
+                                            Activar
+                                        {% endif %}
+                                    </button>
+                                </form>
+
+                                <form method="post"
+                                      action="{% url 'usuario_eliminar' usuario.id %}"
+                                      onsubmit="return confirm('¿Seguro que deseas eliminar este usuario? Esta acción no se puede deshacer.');">
+                                    {% csrf_token %}
+                                    <button class="accion eliminar" type="submit">
+                                        Eliminar
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="vacio">
+                                No hay usuarios registrados.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <footer>© 2026 Hotel Taroa · Sistema de gestión hotelera</footer>
+</div>
+</body>
+</html>
+

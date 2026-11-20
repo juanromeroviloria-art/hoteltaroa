@@ -1,0 +1,103 @@
+
+{% extends "base.html" %}
+
+{% block title %}Historial de reservas | Hotel Taroa{% endblock %}
+
+{% block content %}
+<section class="seccion-login-cliente historial-reservas-seccion">
+    <div class="contenedor-cliente">
+
+        <div class="encabezado-login-cliente">
+            <h1>Historial de reservas</h1>
+            <p>Consulta tus estadías anteriores y reservas canceladas.</p>
+        </div>
+
+        <div class="lista-historial-reservas">
+
+            {% for reserva in reservas %}
+            <article class="tarjeta-login-cliente tarjeta-reserva-cliente">
+
+                <div class="reserva-horizontal-encabezado">
+                    <h2>Reserva #{{ reserva.id }}</h2>
+                    <span>{{ reserva.get_estado_display }}</span>
+                </div>
+
+                <div class="datos-reserva-horizontal">
+
+                    <div class="dato-reserva">
+                        <strong>Habitación</strong>
+                        <p>{{ reserva.habitacion.numero }}</p>
+                    </div>
+
+                    <div class="dato-reserva">
+                        <strong>Tipo</strong>
+                        <p>{{ reserva.habitacion.tipo.nombre }}</p>
+                    </div>
+
+                    <div class="dato-reserva">
+                        <strong>Entrada</strong>
+                        <p>{{ reserva.fecha_entrada|date:"d/m/Y" }}</p>
+                    </div>
+
+                    <div class="dato-reserva">
+                        <strong>Salida</strong>
+                        <p>{{ reserva.fecha_salida|date:"d/m/Y" }}</p>
+                    </div>
+
+                    <div class="dato-reserva">
+                        <strong>Adultos</strong>
+                        <p>{{ reserva.cantidad_huespedes }}</p>
+                    </div>
+
+                    <div class="dato-reserva">
+                        <strong>Niños</strong>
+                        <p>{{ reserva.cantidad_ninos }}</p>
+                    </div>
+
+                    <div class="dato-reserva">
+                        <strong>Total personas</strong>
+                        <p>{{ reserva.cantidad_huespedes|add:reserva.cantidad_ninos }}</p>
+                    </div>
+
+                    <div class="dato-reserva dato-total">
+                        <strong>Total estadía</strong>
+                        <p>${{ reserva.valor_total|floatformat:0 }}</p>
+                    </div>
+
+                </div>
+
+                <div class="reserva-horizontal-pie">
+                    <a href="{% url 'reserva_factura' reserva.id %}">
+                        Ver factura detallada
+                    </a>
+                </div>
+
+            </article>
+
+            {% empty %}
+
+            <div class="tarjeta-login-cliente">
+                <h2>Tu historial está vacío</h2>
+                <p>
+                    Cuando completes una estadía o tengas una reserva
+                    cancelada, aparecerá aquí.
+                </p>
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        <nav class="navegacion-cliente">
+            <a href="{% url 'habitaciones_cliente' %}">
+                Ver habitaciones
+            </a>
+
+            <a href="{% url 'mis_reservas' %}">
+                Mis reservas
+            </a>
+        </nav>
+
+    </div>
+</section>
+{% endblock %}

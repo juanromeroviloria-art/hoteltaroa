@@ -1,0 +1,114 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ accion }} usuario | Hotel Taroa</title>
+    <link rel="stylesheet" href="{% static 'css/usuarios.css' %}">
+</head>
+<body>
+<div class="pagina">
+
+    <header class="encabezado">
+        <div>
+            <span class="marca">HOTEL TAROA</span>
+            <p>GESTIÓN HOTELERA · RIOHACHA</p>
+        </div>
+        <a class="volver" href="{% url 'usuarios' %}">← Volver a usuarios</a>
+    </header>
+
+    <main>
+        <section class="presentacion">
+            <span class="etiqueta">ADMINISTRACIÓN</span>
+            <h1>{{ accion }} usuario</h1>
+            <p>Completa los datos de la cuenta del sistema.</p>
+        </section>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mensaje">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <section class="contenido formulario-contenido">
+            <form method="post">
+                {% csrf_token %}
+
+                <label for="username">Nombre de usuario *</label>
+                <input id="username" name="username" type="text"
+                       maxlength="150" required
+                       value="{{ usuario_editado.username|default:'' }}">
+
+                <label for="first_name">Nombre</label>
+                <input id="first_name" name="first_name" type="text"
+                       value="{{ usuario_editado.first_name|default:'' }}">
+
+                <label for="last_name">Apellido</label>
+                <input id="last_name" name="last_name" type="text"
+                       value="{{ usuario_editado.last_name|default:'' }}">
+
+                <label for="email">Correo electrónico</label>
+                <input id="email" name="email" type="email"
+                       value="{{ usuario_editado.email|default:'' }}">
+
+                <label for="password">
+                    {% if accion == "Crear" %}
+                        Contraseña *
+                    {% else %}
+                        Nueva contraseña (opcional)
+                    {% endif %}
+                </label>
+                <input id="password" name="password" type="password"
+                       minlength="8"
+                       {% if accion == "Crear" %}required{% endif %}
+                       autocomplete="new-password"
+                       placeholder="{% if accion == 'Crear' %}Mínimo 8 caracteres{% else %}Déjala vacía para conservarla{% endif %}">
+
+                <p class="ayuda">
+                    La contraseña se guarda de forma protegida. No se puede consultar la contraseña anterior.
+                </p>
+
+                
+              <label for="rol">Tipo de cuenta / Rol *</label>
+              <select id="rol" name="rol" required>
+              <option value="">Selecciona un rol</option>
+
+              {% for rol in roles %}
+              <option value="{{ rol.id }}"
+              {% if rol_actual == rol.id %}selected
+              {% elif not rol_actual and accion == "Crear" and rol.nombre == "Cliente" %}selected
+              {% endif %}>
+               {{ rol.nombre }}
+             </option>
+            {% endfor %}
+            </select>
+
+
+                <label class="check-activo">
+                    <input type="checkbox" name="is_active"
+                           {% if accion == "Crear" %}
+                               checked
+                           {% elif usuario_editado.is_active %}
+                               checked
+                           {% endif %}>
+                    Cuenta activa
+                </label>
+
+                <div class="botones-formulario">
+                    <button class="boton" type="submit">
+                        Guardar usuario
+                    </button>
+                    <a class="boton-secundario" href="{% url 'usuarios' %}">
+                        Cancelar
+                    </a>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <footer>© 2026 Hotel Taroa · Sistema de gestión hotelera</footer>
+</div>
+</body>
+</html>

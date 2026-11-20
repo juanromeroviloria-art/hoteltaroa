@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios | Hotel Taroa</title>
+    <link rel="stylesheet" href="{% static 'css/servicios.css' %}">
+</head>
+<body>
+    <main class="servicios-contenedor">
+        <div class="encabezado-servicios">
+            <div>
+                <h1>Servicios del Hotel Taroa</h1>
+                <p>Consulta el catálogo y administra los servicios según los permisos de tu rol.</p>
+            </div>
+            {% if puede_agregar_servicio %}
+                <a href="{% url 'servicio_crear' %}" class="btn-principal">
+                    + Nuevo servicio
+                </a>
+            {% endif %}
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mensaje">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        {% if servicio_eliminar %}
+            <div class="confirmacion">
+                <h3>¿Eliminar {{ servicio_eliminar.nombre }}?</h3>
+                <form method="post" action="{% url 'servicio_eliminar' servicio_eliminar.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-eliminar">Sí, eliminar</button>
+                    <a href="{% url 'servicios' %}" class="btn-secundario">Cancelar</a>
+                </form>
+            </div>
+        {% endif %}
+
+        <div class="tabla-contenedor">
+            <table class="tabla-servicios">
+                <thead>
+                    <tr>
+                        <th>Área</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Precio</th>
+                        <th>Estado</th>
+                        {% if puede_administrar_servicios %}<th>Acciones</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for servicio in servicios %}
+                    <tr>
+                        <td>{{ servicio.get_area_display }}</td>
+                        <td>{{ servicio.nombre }}</td>
+                        <td>{{ servicio.descripcion|default:"Sin descripción" }}</td>
+                        <td>${{ servicio.precio|floatformat:0 }}</td>
+                        <td>
+                            {% if servicio.activo %}
+                                <span class="estado activo">Activo</span>
+                            {% else %}
+                                <span class="estado inactivo">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        {% if puede_administrar_servicios %}
+                            <td class="acciones">
+                                <a href="{% url 'servicio_editar' servicio.id %}" class="btn-editar">Editar</a>
+                                <a href="{% url 'servicio_eliminar' servicio.id %}" class="btn-eliminar">Eliminar</a>
+                            </td>
+                        {% endif %}
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="{% if puede_administrar_servicios %}6{% else %}5{% endif %}" class="vacio">No hay servicios registrados todavía.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="volver-panel">
+    <a href="{% url 'panel' %}" class="btn-volver">
+        ← Volver al panel
+    </a>
+</div>
+    </main>
+</body>
+</html>

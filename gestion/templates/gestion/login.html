@@ -1,0 +1,163 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar sesión | Hotel Taroa</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #FDFBF8;
+            isolation: isolate;
+        }
+
+        .fondo-login {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        body::before {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: rgba(36, 27, 21, 0.38);
+            content: "";
+        }
+
+        .login-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            padding: 38px 32px;
+            background: #FFFFFF;
+            border: 1px solid #E6C2A3;
+            border-radius: 14px;
+            box-shadow: 0 8px 25px rgba(100, 65, 40, 0.10);
+        }
+
+        .marca {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .marca h1 {
+            margin: 0 0 8px;
+            color: #C98250;
+            font-size: 30px;
+        }
+
+        .marca p {
+            margin: 0;
+            color: #777;
+            font-size: 14px;
+        }
+
+        label {
+            display: block;
+            margin: 17px 0 7px;
+            color: #514238;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #E6C2A3;
+            border-radius: 7px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        input:focus {
+            border-color: #C98250;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 25px;
+            padding: 13px;
+            background: #C98250;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #B66E40;
+        }
+
+        .error {
+            padding: 11px;
+            margin-bottom: 12px;
+            color: #8A2525;
+            background: #FCE8E6;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <img class="fondo-login" src="{% static 'img/fondo-login.jpg' %}" alt="" aria-hidden="true">
+    <div class="login-container">
+        <div class="marca">
+            <h1>Hotel Taroa</h1>
+            <p>Software de gestión hotelera</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="error">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+            {% csrf_token %}
+
+            <label for="usuario">Usuario</label>
+            <input
+                type="text"
+                id="usuario"
+                name="usuario"
+                placeholder="Ingresa tu usuario"
+                autocomplete="username"
+                required
+            >
+
+            <label for="contrasena">Contraseña</label>
+            <input
+                type="password"
+                id="contrasena"
+                name="contrasena"
+                placeholder="Ingresa tu contraseña"
+                autocomplete="current-password"
+                required
+            >
+
+            <button type="submit">Iniciar sesión</button>
+        </form>
+        <p style="margin: 18px 0 0; text-align: center;">
+            <a href="{% url 'inicio' %}" style="color: #9b6039;">Volver al inicio</a>
+        </p>
+    </div>
+</body>
+</html>

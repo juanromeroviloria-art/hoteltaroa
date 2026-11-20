@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Roles | Hotel Taroa</title>
+    <link rel="stylesheet" href="{% static 'css/roles.css' %}">
+</head>
+<body>
+    <main class="contenedor">
+        <header class="encabezado">
+            <div>
+                <p class="subtitulo">HOTEL TAROA</p>
+                <h1>Roles del sistema</h1>
+                <p class="descripcion">Administra los perfiles de acceso al sistema.</p>
+            </div>
+            <a href="{% url 'panel' %}" class="boton boton-secundario">← Volver al panel</a>
+        </header>
+
+        {% if messages %}
+            <section class="mensajes">
+                {% for message in messages %}
+                    <div class="mensaje {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </section>
+        {% endif %}
+
+        <section class="barra">
+            <div>
+                <h2>Listado de roles</h2>
+                <p>Asigna los permisos correspondientes a cada tipo de usuario.</p>
+            </div>
+            <a href="{% url 'rol_crear' %}" class="boton boton-principal">+ Crear rol</a>
+        </section>
+
+        <section class="tabla-contenedor">
+            <table>
+                <thead>
+                    <tr><th>Nombre</th><th>Descripción</th><th>Usuarios asignados</th><th>Acciones</th></tr>
+                </thead>
+                <tbody>
+                    {% for rol in roles %}
+                        <tr>
+                            <td class="nombre-rol">{{ rol.nombre }}</td>
+                            <td>{{ rol.descripcion|default:"Sin descripción" }}</td>
+                            <td>{{ rol.usuario_set.count }}</td>
+                            <td class="acciones">
+                                <a href="{% url 'rol_editar' rol.id %}" class="accion editar">Editar</a>
+                                {% if rol.usuario_set.count == 0 %}
+                                    <form method="post" action="{% url 'rol_eliminar' rol.id %}" onsubmit="return confirm('¿Eliminar este rol?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="accion eliminar">Eliminar</button>
+                                    </form>
+                                {% else %}
+                                    <span class="protegido">Tiene usuarios asignados</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="4" class="vacio">Aún no hay roles configurados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    </main>
+</body>
+</html>

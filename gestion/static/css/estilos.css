@@ -1,0 +1,1280 @@
+login 
+   
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #FDFBF8;
+    color: #44382F;
+    min-height: 100vh;
+}
+
+.contenedor-login {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 25px;
+}
+
+.login {
+    background: #FFFFFF;
+    width: 100%;
+    max-width: 420px;
+    padding: 42px 35px;
+    border: 1px solid #E6C2A3;
+    border-radius: 16px;
+    box-shadow: 0 10px 35px rgba(120, 79, 48, 0.08);
+}
+
+.logo {
+    text-align: center;
+    margin-bottom: 35px;
+}
+
+.logo h1 {
+    color: #C98250;
+    font-size: 29px;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.logo p,
+.descripcion {
+    color: #8A8179;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.login h2 {
+    font-size: 23px;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.descripcion {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.campo {
+    margin-bottom: 20px;
+}
+
+.campo label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.campo input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid #E6D8CC;
+    border-radius: 8px;
+    background: #FFFEFC;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.campo input:focus {
+    border-color: #C98250;
+    box-shadow: 0 0 0 3px rgba(201, 130, 80, 0.12);
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background: #C98250;
+    color: #FFFFFF;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: #B66D3D;
+}
+
+.mensaje {
+    padding: 11px;
+    margin-bottom: 18px;
+    background: #FFF0E8;
+    color: #9B4B32;
+    border-radius: 7px;
+    font-size: 14px;
+}
+
+footer {
+    text-align: center;
+    margin-top: 28px;
+    color: #9B9188;
+    font-size: 12px;
+}
+
+@media (max-width: 480px) {
+    .login {
+        padding: 32px 23px;
+    }
+
+    .logo h1 {
+        font-size: 25px;
+    }
+}
+
+
+
+/* =====================================
+   PLANTILLA GENERAL - HOTEL TAROA
+   ===================================== */
+
+.contenedor-header {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 18px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+}
+
+header {
+    background: #FFFFFF;
+    border-bottom: 1px solid #E6C2A3;
+    box-shadow: 0 2px 10px rgba(68, 56, 47, 0.05);
+}
+
+.contenedor-header .logo {
+    color: #C98250;
+    font-size: 24px;
+    font-weight: bold;
+    text-decoration: none;
+    letter-spacing: 1px;
+}
+
+.contenedor-header nav {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    flex-wrap: wrap;
+}
+
+.contenedor-header nav a {
+    color: #44382F;
+    text-decoration: none;
+    font-size: 15px;
+    transition: color 0.2s ease;
+}
+
+.contenedor-header nav a:hover {
+    color: #C98250;
+}
+
+main {
+    min-height: 70vh;
+}
+
+/* Portada */
+
+.portada {
+    position: relative;
+    overflow: hidden;
+    min-height: 480px;
+    padding: 80px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    background: #9b6039;
+}
+
+.portada::before {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(
+        110deg,
+        rgba(73, 43, 26, 0.7),
+        rgba(128, 74, 39, 0.42)
+    );
+    content: "";
+}
+
+.portada-imagen {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 55%;
+}
+
+.portada-contenido {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 800px;
+}
+
+.portada .subtitulo {
+    margin-bottom: 18px;
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 3px;
+}
+
+.portada h1 {
+    margin-bottom: 22px;
+    color: #FFFFFF;
+    font-size: clamp(32px, 5vw, 52px);
+    line-height: 1.2;
+}
+
+.portada-contenido > p:not(.subtitulo) {
+    max-width: 650px;
+    margin: 0 auto 30px;
+    color: #FFFFFF;
+    font-size: 17px;
+    line-height: 1.8;
+}
+
+.portada-botones {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.boton-principal,
+.boton-secundario {
+    display: inline-block;
+    padding: 14px 24px;
+    border: 1px solid #FFFFFF;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: 0.2s ease;
+}
+
+.boton-principal {
+    background: #FFFFFF;
+    color: #B76E3E;
+}
+
+.boton-principal:hover {
+    background: #FDFBF8;
+}
+
+.boton-secundario {
+    background: transparent;
+    color: #FFFFFF;
+}
+
+.boton-secundario:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+/* Bienvenida */
+
+.bienvenida {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 65px 25px;
+    text-align: center;
+}
+
+.bienvenida h2 {
+    margin-bottom: 20px;
+    color: #C98250;
+    font-size: 30px;
+}
+
+.bienvenida p {
+    color: #66574B;
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+/* Pie de página */
+
+footer {
+    padding: 25px 15px;
+    background: #FFFFFF;
+    border-top: 1px solid #E6C2A3;
+    text-align: center;
+    color: #66574B;
+}
+
+/* Adaptación a celulares */
+
+@media (max-width: 700px) {
+    .contenedor-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .contenedor-header nav {
+        justify-content: center;
+        gap: 14px;
+    }
+
+    .portada {
+        min-height: 400px;
+        padding: 55px 20px;
+    }
+
+    .portada h1 {
+        font-size: 34px;
+    }
+}
+
+
+
+/* LOGIN DEL CLIENTE */
+
+.seccion-login-cliente {
+    min-height: 75vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 45px 20px;
+    background: #FDFBF8;
+}
+
+.tarjeta-login-cliente {
+    width: 100%;
+    max-width: 460px;
+    padding: 38px;
+    background: #FFFFFF;
+    border: 1px solid #E6C2A3;
+    border-radius: 14px;
+    box-shadow: 0 8px 28px rgba(68, 56, 47, 0.08);
+}
+
+.encabezado-login-cliente {
+    margin-bottom: 28px;
+    text-align: center;
+}
+
+.encabezado-login-cliente h1 {
+    margin-bottom: 12px;
+    color: #C98250;
+    font-size: 27px;
+}
+
+.encabezado-login-cliente p {
+    color: #66574B;
+    line-height: 1.6;
+}
+
+.campo-login-cliente {
+    margin-bottom: 20px;
+}
+
+.campo-login-cliente label {
+    display: block;
+    margin-bottom: 8px;
+    color: #44382F;
+    font-weight: bold;
+}
+
+.campo-login-cliente input,
+.campo-login-cliente select {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 50px;
+    padding: 13px;
+    border: 1px solid #DCCFC4;
+    border-radius: 7px;
+    background: #FFFFFF;
+    color: #44382F;
+    font-family: inherit;
+    font-size: 15px;
+}
+
+.campo-login-cliente input:focus,
+.campo-login-cliente select:focus {
+    outline: 2px solid #E6C2A3;
+    border-color: #C98250;
+}
+
+.servicios-reserva {
+    min-width: 0;
+    margin: 0 0 22px;
+    padding: 16px;
+    border: 1px solid #E6C2A3;
+    border-radius: 8px;
+}
+
+.servicios-reserva legend {
+    padding: 0 6px;
+    color: #44382F;
+    font-weight: bold;
+}
+
+.ayuda-servicios {
+    margin-bottom: 12px;
+    color: #66574B;
+    font-size: 14px;
+}
+
+.opciones-servicios {
+    display: grid;
+    gap: 10px;
+}
+
+.opcion-servicio {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px;
+    border: 1px solid #E6D8CC;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+.opcion-servicio input {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+    accent-color: #C98250;
+}
+
+.detalle-servicio {
+    display: grid;
+    flex: 1;
+    gap: 3px;
+}
+
+.detalle-servicio small {
+    color: #66574B;
+    font-weight: normal;
+}
+
+.precio-servicio {
+    color: #9B6039;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.servicios-reserva-detalle ul {
+    margin: 6px 0 12px;
+    padding-left: 22px;
+}
+
+.boton-login-cliente {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 7px;
+    background: #C98250;
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.boton-login-cliente:hover {
+    background: #B76E3E;
+}
+
+.texto-registro-cliente {
+    margin-top: 24px;
+    text-align: center;
+    color: #66574B;
+    line-height: 1.7;
+}
+
+.texto-registro-cliente a,
+.volver-inicio-cliente {
+    color: #B76E3E;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.volver-inicio-cliente {
+    display: block;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.mensaje-login {
+    margin-bottom: 18px;
+    padding: 12px;
+    border-radius: 6px;
+    background: #FDFBF8;
+    color: #44382F;
+}
+
+.historial-reservas-seccion,
+.mis-reservas-seccion {
+    display: block;
+    padding: 40px 24px;
+}
+
+.historial-reservas-seccion .contenedor-cliente {
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.mis-reservas-seccion .contenedor-cliente {
+    width: 100%;
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.historial-reservas-seccion .encabezado-login-cliente {
+    margin-bottom: 24px;
+}
+
+.mis-reservas-seccion .encabezado-login-cliente {
+    margin-bottom: 24px;
+}
+
+.lista-historial-reservas {
+    display: grid;
+    gap: 16px;
+}
+
+.lista-mis-reservas {
+    display: grid;
+    gap: 16px;
+}
+
+.lista-historial-reservas .tarjeta-reserva-cliente {
+    width: 100%;
+    max-width: none;
+    padding: 22px 26px;
+}
+
+.lista-mis-reservas .tarjeta-reserva-cliente {
+    width: 100%;
+    max-width: none;
+    padding: 22px 26px;
+}
+
+.reserva-horizontal-encabezado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #E6D8CC;
+}
+
+.reserva-horizontal-encabezado h2 {
+    margin: 0;
+    color: #9B6039;
+    font-size: 19px;
+}
+
+.reserva-horizontal-encabezado span {
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #F5E7DC;
+    color: #80563B;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.datos-reserva-horizontal {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 14px;
+    padding: 18px 0;
+}
+
+.dato-reserva {
+    min-width: 0;
+}
+
+.dato-reserva strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #78685C;
+    font-size: 12px;
+}
+
+.dato-reserva p {
+    margin: 0;
+    color: #44382F;
+    font-size: 15px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.dato-reserva.dato-total p {
+    color: #9B6039;
+    font-size: 18px;
+}
+
+.reserva-horizontal-pie {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 12px;
+    border-top: 1px solid #E6D8CC;
+}
+
+.reserva-horizontal-pie a {
+    color: #9B6039;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.reserva-horizontal-pie a:hover {
+    text-decoration: underline;
+}
+
+.detalles-extra-reserva {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 12px;
+    padding: 0 0 16px;
+}
+
+.detalles-extra-reserva > div {
+    display: grid;
+    gap: 6px;
+    padding: 12px;
+    border-radius: 8px;
+    background: #FDF8F3;
+    color: #66574B;
+    font-size: 13px;
+}
+
+.detalles-extra-reserva strong {
+    color: #80563B;
+}
+
+.cancelacion-reserva-horizontal {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 10px 16px;
+    padding-top: 16px;
+    border-top: 1px solid #E6D8CC;
+}
+
+.cancelacion-reserva-horizontal label {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: #78685C;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.cancelacion-reserva-horizontal textarea {
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid #DCCFC4;
+    border-radius: 7px;
+    resize: vertical;
+    font: inherit;
+}
+
+.cancelacion-reserva-horizontal .boton-login-cliente {
+    width: auto;
+    min-height: 42px;
+    padding: 10px 16px;
+    font-size: 14px;
+}
+
+@media (max-width: 480px) {
+    .tarjeta-login-cliente {
+        padding: 25px 20px;
+    }
+
+    .historial-reservas-seccion,
+    .mis-reservas-seccion {
+        padding: 28px 14px;
+    }
+
+    .lista-historial-reservas .tarjeta-reserva-cliente,
+    .lista-mis-reservas .tarjeta-reserva-cliente {
+        padding: 18px 16px;
+    }
+
+    .datos-reserva-horizontal {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 13px;
+    }
+
+    .cancelacion-reserva-horizontal {
+        grid-template-columns: 1fr;
+    }
+
+    .cancelacion-reserva-horizontal label {
+        grid-column: auto;
+    }
+
+    .cancelacion-reserva-horizontal .boton-login-cliente {
+        width: 100%;
+    }
+}
+
+
+/* =========================================
+   MODO OSCURO SUAVE - HOTEL TAROA
+   ========================================= */
+
+html[data-tema="oscuro"] body {
+    background: #34312F;
+    color: #F7F2EE;
+}
+
+/* Encabezado y navegación */
+
+html[data-tema="oscuro"] header {
+    background: #403B37;
+    border-bottom: 1px solid #62564E;
+}
+
+html[data-tema="oscuro"] .contenedor-header .logo {
+    color: #F0C5A5;
+}
+
+html[data-tema="oscuro"] .contenedor-header nav a {
+    color: #F7F2EE;
+}
+
+html[data-tema="oscuro"] .contenedor-header nav a:hover {
+    color: #E6B18D;
+}
+
+/* Botón para cambiar el tema */
+
+.boton-tema {
+    width: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 13px;
+    border: 1px solid #C98250;
+    border-radius: 8px;
+    background: #FDFBF8;
+    color: #9B6039;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.boton-tema:hover {
+    background: #F5E7DC;
+}
+
+html[data-tema="oscuro"] .boton-tema {
+    background: #5A5049;
+    color: #FFFFFF;
+    border-color: #D49A72;
+}
+
+html[data-tema="oscuro"] .boton-tema:hover {
+    background: #6B5D53;
+}
+
+/* Secciones y tarjetas */
+
+html[data-tema="oscuro"] main,
+html[data-tema="oscuro"] .seccion-login-cliente {
+    background: #34312F;
+    color: #F7F2EE;
+}
+
+html[data-tema="oscuro"] .tarjeta-login-cliente,
+html[data-tema="oscuro"] .login {
+    background: #49433F;
+    color: #FFFFFF;
+    border-color: #75675D;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+}
+
+html[data-tema="oscuro"] .encabezado-login-cliente p,
+html[data-tema="oscuro"] .texto-registro-cliente,
+html[data-tema="oscuro"] .bienvenida p {
+    color: #F0E5DC;
+}
+
+html[data-tema="oscuro"] .encabezado-login-cliente h1,
+html[data-tema="oscuro"] .bienvenida h2 {
+    color: #F0C5A5;
+}
+
+/* Formularios */
+
+html[data-tema="oscuro"] input,
+html[data-tema="oscuro"] select,
+html[data-tema="oscuro"] textarea,
+html[data-tema="oscuro"] .campo-login-cliente input,
+html[data-tema="oscuro"] .campo-login-cliente select {
+    background: #5A524C;
+    color: #FFFFFF;
+    border-color: #88796E;
+}
+
+html[data-tema="oscuro"] input::placeholder,
+html[data-tema="oscuro"] textarea::placeholder {
+    color: #E0D5CC;
+}
+
+html[data-tema="oscuro"] label,
+html[data-tema="oscuro"] legend {
+    color: #FFFFFF;
+}
+
+html[data-tema="oscuro"] .opcion-servicio {
+    background: #504943;
+    border-color: #75675D;
+    color: #FFFFFF;
+}
+
+html[data-tema="oscuro"] .ayuda-servicios,
+html[data-tema="oscuro"] .detalle-servicio small {
+    color: #E6DAD0;
+}
+
+/* Botones */
+
+html[data-tema="oscuro"] .boton-login-cliente {
+    background: #C98250;
+    color: #FFFFFF;
+}
+
+/* Textos y enlaces */
+
+html[data-tema="oscuro"] h1,
+html[data-tema="oscuro"] h2,
+html[data-tema="oscuro"] h3,
+html[data-tema="oscuro"] h4,
+html[data-tema="oscuro"] p,
+html[data-tema="oscuro"] span,
+html[data-tema="oscuro"] strong,
+html[data-tema="oscuro"] td,
+html[data-tema="oscuro"] th {
+    color: #F7F2EE;
+}
+
+html[data-tema="oscuro"] a {
+    color: #F0C5A5;
+}
+
+/* Tablas */
+
+html[data-tema="oscuro"] .table {
+    --bs-table-bg: #49433F;
+    --bs-table-color: #FFFFFF;
+    --bs-table-border-color: #75675D;
+    --bs-table-striped-bg: #554D47;
+    --bs-table-striped-color: #FFFFFF;
+    --bs-table-hover-bg: #62574F;
+    --bs-table-hover-color: #FFFFFF;
+}
+
+html[data-tema="oscuro"] .table th,
+html[data-tema="oscuro"] .table td {
+    color: #FFFFFF;
+    background-color: transparent;
+}
+
+/* Mensajes */
+
+html[data-tema="oscuro"] .mensaje-login {
+    background: #5A5049;
+    color: #FFFFFF;
+}
+
+html[data-tema="oscuro"] .mensaje-login.success {
+    background: #385342;
+    color: #D9F5E1;
+}
+
+html[data-tema="oscuro"] .mensaje-login.error {
+    background: #684343;
+    color: #FFE1E1;
+}
+
+/* Pie de página */
+
+html[data-tema="oscuro"] footer {
+    background: #403B37;
+    color: #F0E5DC;
+    border-top: 1px solid #62564E;
+}
+
+/* Portada y paneles */
+
+html[data-tema="oscuro"] .portada {
+    background: #49433F;
+    color: #FFFFFF;
+}
+
+html[data-tema="oscuro"] .servicios-reserva-detalle {
+    color: #FFFFFF;
+}
+
+/* Adaptación del botón en celulares */
+
+@media (max-width: 700px) {
+    .boton-tema {
+        margin: 5px auto;
+    }
+}
+
+/* =========================================
+   COMPLETAR MODO OSCURO - TODA LA PÁGINA
+   HOTEL TAROA
+   ========================================= */
+
+html[data-tema="oscuro"] main {
+    background: #34312F !important;
+    color: #F7F2EE !important;
+}
+
+/* Contenedores y tarjetas */
+
+html[data-tema="oscuro"] main .card,
+html[data-tema="oscuro"] main .contenedor,
+html[data-tema="oscuro"] main .tarjeta,
+html[data-tema="oscuro"] main .habitacion,
+html[data-tema="oscuro"] main .tarjeta-habitacion,
+html[data-tema="oscuro"] main .buscador,
+html[data-tema="oscuro"] main .buscador-disponibilidad,
+html[data-tema="oscuro"] main .formulario-busqueda {
+    background: #49433F !important;
+    color: #FFFFFF !important;
+    border-color: #75675D !important;
+}
+
+/* Formularios y recuadros */
+
+html[data-tema="oscuro"] main form,
+html[data-tema="oscuro"] main fieldset {
+    background-color: #49433F;
+    color: #FFFFFF;
+    border-color: #75675D;
+}
+
+html[data-tema="oscuro"] main input,
+html[data-tema="oscuro"] main select,
+html[data-tema="oscuro"] main textarea {
+    background-color: #5A524C !important;
+    color: #FFFFFF !important;
+    border-color: #88796E !important;
+}
+
+html[data-tema="oscuro"] main input::placeholder,
+html[data-tema="oscuro"] main textarea::placeholder {
+    color: #E0D5CC !important;
+}
+
+/* Evitar fondos blancos de Bootstrap */
+
+html[data-tema="oscuro"] .bg-white,
+html[data-tema="oscuro"] .bg-light,
+html[data-tema="oscuro"] .bg-body,
+html[data-tema="oscuro"] .list-group-item {
+    background-color: #49433F !important;
+    color: #FFFFFF !important;
+    border-color: #75675D !important;
+}
+
+/* Textos */
+
+html[data-tema="oscuro"] main h1,
+html[data-tema="oscuro"] main h2,
+html[data-tema="oscuro"] main h3,
+html[data-tema="oscuro"] main h4,
+html[data-tema="oscuro"] main p,
+html[data-tema="oscuro"] main label,
+html[data-tema="oscuro"] main span,
+html[data-tema="oscuro"] main strong {
+    color: #F7F2EE;
+}
+
+/* Tablas */
+
+html[data-tema="oscuro"] main table {
+    background-color: #49433F !important;
+    color: #FFFFFF !important;
+}
+
+html[data-tema="oscuro"] main th,
+html[data-tema="oscuro"] main td {
+    background-color: #49433F !important;
+    color: #FFFFFF !important;
+    border-color: #75675D !important;
+}
+
+/* Botones */
+
+html[data-tema="oscuro"] main button,
+html[data-tema="oscuro"] main .btn {
+    color: #FFFFFF;
+}
+
+/* Enlaces */
+
+html[data-tema="oscuro"] main a {
+    color: #F0C5A5;
+}
+
+
+/* =========================================
+   TARJETAS DE HABITACIONES - MODO OSCURO
+   ========================================= */
+
+html[data-tema="oscuro"] .card,
+html[data-tema="oscuro"] .card-body,
+html[data-tema="oscuro"] .tarjeta-habitacion {
+    background-color: #49433F !important;
+    color: #FFFFFF !important;
+    border-color: #75675D !important;
+}
+
+/* Títulos de habitaciones */
+
+html[data-tema="oscuro"] .card-title,
+html[data-tema="oscuro"] .card h5,
+html[data-tema="oscuro"] .tarjeta-habitacion h5 {
+    color: #F0C5A5 !important;
+}
+
+/* Información de las habitaciones */
+
+html[data-tema="oscuro"] .card-text,
+html[data-tema="oscuro"] .card-body p,
+html[data-tema="oscuro"] .card-body strong,
+html[data-tema="oscuro"] .tarjeta-habitacion p {
+    color: #F7F2EE !important;
+}
+
+/* Precio por noche */
+
+html[data-tema="oscuro"] .card-body h4,
+html[data-tema="oscuro"] .card-body h3,
+html[data-tema="oscuro"] .card-body .precio {
+    color: #E6A06D !important;
+}
+
+/* Botón reservar */
+
+html[data-tema="oscuro"] .card-body .btn,
+html[data-tema="oscuro"] .card-body button {
+    background-color: #C98250 !important;
+    color: #FFFFFF !important;
+    border-color: #C98250 !important;
+}
+
+/* Bordes de las tarjetas */
+
+html[data-tema="oscuro"] .card {
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+
+
+/* =========================================
+   FORMULARIO DE RESERVA HORIZONTAL
+   HOTEL TAROA
+   ========================================= */
+
+.seccion-reserva {
+    padding: 40px 20px;
+}
+
+.tarjeta-reserva {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 35px;
+}
+
+.formulario-reserva {
+    width: 100%;
+}
+
+.formulario-reserva-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.formulario-reserva-grid .campo-login-cliente {
+    margin-bottom: 0;
+    min-width: 0;
+}
+
+.formulario-reserva-grid input,
+.formulario-reserva-grid select {
+    width: 100%;
+}
+
+.formulario-reserva .servicios-reserva {
+    margin-top: 28px;
+    width: 100%;
+}
+
+.formulario-reserva .opciones-servicios {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.formulario-reserva .opcion-servicio {
+    min-width: 0;
+}
+
+.boton-confirmar-reserva {
+    margin-top: 25px;
+    width: 100%;
+}
+
+/* Modo oscuro */
+
+html[data-tema="oscuro"] .tarjeta-reserva {
+    background: #49433F !important;
+    color: #FFFFFF;
+    border-color: #75675D;
+}
+
+html[data-tema="oscuro"] .formulario-reserva .servicios-reserva {
+    background: #49433F;
+    border-color: #88796E;
+    color: #FFFFFF;
+}
+
+/* Tabletas */
+
+@media (max-width: 850px) {
+    .formulario-reserva-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Celulares */
+
+@media (max-width: 600px) {
+    .tarjeta-reserva {
+        padding: 22px 16px;
+    }
+
+    .formulario-reserva-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .formulario-reserva .opciones-servicios {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* =========================================
+   REGISTRO DE CLIENTES HORIZONTAL
+   HOTEL TAROA
+   ========================================= */
+
+.seccion-registro {
+    padding: 40px 20px;
+}
+
+.tarjeta-registro {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 35px;
+}
+
+.registro-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px 22px;
+}
+
+.registro-grid .campo-login-cliente {
+    margin-bottom: 0;
+    min-width: 0;
+}
+
+.registro-grid input,
+.registro-grid select {
+    width: 100%;
+}
+
+.boton-crear-cuenta {
+    margin-top: 28px;
+    width: 100%;
+}
+
+/* Modo oscuro */
+
+html[data-tema="oscuro"] .tarjeta-registro {
+    background: #49433F !important;
+    color: #FFFFFF;
+    border-color: #75675D;
+}
+
+/* Tablet */
+
+@media (max-width: 850px) {
+    .registro-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* Celulares */
+
+@media (max-width: 600px) {
+    .tarjeta-registro {
+        padding: 22px 16px;
+    }
+
+    .registro-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.campo-password {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.campo-password input {
+    width: 100%;
+    padding-right: 45px;
+    box-sizing: border-box;
+}
+
+.campo-password button {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    z-index: 2;
+}
+
+
+
+
+

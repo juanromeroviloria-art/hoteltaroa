@@ -1,0 +1,418 @@
+﻿
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel principal | Hotel Taroa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}?v=11">
+    <link rel="stylesheet" href="{% static 'css/panel.css' %}?v=15">
+</head>
+<body class="dashboard-page">
+
+<div class="contenedor">
+
+    <aside class="sidebar">
+        <div class="logo">HOTEL TAROA</div>
+        <div class="sublogo">HOSPITALIDAD &amp; CONFORT</div>
+
+        <p class="menu-titulo">MENÚ PRINCIPAL</p>
+
+        <nav class="menu">
+            <a href="{% url 'panel' %}" class="activo">
+                <span class="menu-icono">⌂</span> Panel principal
+            </a>
+
+            {% if puede_administrar %}
+            <a href="{% url 'usuarios' %}">
+           <span class="menu-icono">♙</span> Usuarios
+            </a>
+
+            <a href="{% url 'roles' %}">
+                <span class="menu-icono">⚙</span> Roles
+            </a>
+            {% endif %}
+
+            {% if puede_administrar %}
+            <a href="{% url 'habitaciones' %}">
+                <span class="menu-icono">▣</span> Habitaciones
+            </a>
+
+            <a href="{% url 'tipos_habitacion' %}">
+                <span class="menu-icono">▦</span> Tipos de habitación
+            </a>
+
+           <a href="{% url 'servicios' %}">
+                <span class="menu-icono">✧</span> Servicios
+            </a>
+            {% endif %}
+
+            {% if es_gerente or es_recepcionista %}
+            <a href="{% url 'servicios' %}">
+                <span class="menu-icono">✧</span> Servicios
+            </a>
+            {% endif %}
+
+            <a href="{% url 'reservas' %}">
+                <span class="menu-icono">▤</span> Reservas
+            </a>
+
+            {% if puede_operar %}
+            <a href="{% url 'huespedes' %}">
+                <span class="menu-icono">♧</span> Huéspedes
+            </a>
+            {% endif %}
+
+            {% if puede_operar or rol_actual == "Gerente" %}
+            <a href="{% url 'pagos' %}">
+                <span class="menu-icono">$</span> Pagos
+            </a>
+            {% endif %}
+
+            {% if puede_administrar or rol_actual == "Gerente" %}
+            <a href="{% url 'reportes' %}">
+                <span class="menu-icono">▥</span> Reportes
+            </a>
+            {% endif %}
+
+            {% if puede_administrar %}
+            <a href="{% url 'alojamiento_configurar' %}">
+                <span class="menu-icono">⚙</span> Configuración del hotel
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-pie">
+            <div class="usuario-mini">{{ request.user.username }}</div>
+            <div class="rol-mini">{{ rol_actual|default:"Usuario" }}</div>
+            <a href="{% url 'perfil' %}" class="btn-cerrar-sesion">Mi perfil</a>
+            <form method="post" action="{% url 'cerrar_sesion' %}" class="form-cerrar-sesion">
+             {% csrf_token %}
+           <button type="submit" class="btn-cerrar-sesion">
+           <span>↪</span> Cerrar sesión
+            </button>
+         </form>
+        </div>
+        
+       
+
+    </aside>
+
+    <main class="contenido">
+
+        <header class="barra-superior">
+            <div>
+                <p class="fecha">HOTEL TAROA · RIOHACHA, LA GUAJIRA</p>
+                <h1>{% if es_gerente %}Panel de gerencia{% elif es_recepcionista %}Panel de recepción{% else %}Panel principal{% endif %}</h1>
+                <p class="bienvenida">
+                    ¡Bienvenido, {{ request.user.username }}!
+                    {% if es_gerente %}
+                        Aquí puedes supervisar los indicadores y resultados del hotel.
+                    {% elif es_recepcionista %}
+                        Aquí puedes gestionar las llegadas, salidas, huéspedes y pagos del día.
+                    {% else %}
+                        Nos alegra tenerte de vuelta.
+                    {% endif %}
+                </p>
+            </div>
+
+            <div class="avatar">
+                {{ request.user.username|first|upper }}
+            </div>
+        </header>
+
+        {% if es_recepcionista %}
+        <section class="indicadores" aria-label="Operación de recepción">
+            <article><span>Entradas de hoy</span><strong>{{ reservas_hoy }}</strong></article>
+            <article><span>Salidas de hoy</span><strong>{{ salidas_hoy }}</strong></article>
+            <article><span>Huéspedes alojados</span><strong>{{ huespedes_alojados }}</strong></article>
+            <article><span>Reservas pendientes</span><strong>{{ reservas_pendientes }}</strong></article>
+            <article><span>Habitaciones disponibles</span><strong>{{ habitaciones_disponibles }}</strong></article>
+        </section>
+        {% else %}
+        <section class="indicadores" aria-label="Indicadores del establecimiento">
+            <article><span>Habitaciones</span><strong>{{ total_habitaciones }}</strong></article>
+            <article><span>Disponibles</span><strong>{{ habitaciones_disponibles }}</strong></article>
+            <article><span>Ocupadas</span><strong>{{ habitaciones_ocupadas }}</strong></article>
+            <article><span>Reservas activas</span><strong>{{ reservas_activas }}</strong></article>
+            <article><span>Entradas de hoy</span><strong>{{ reservas_hoy }}</strong></article>
+            <article><span>Huéspedes</span><strong>{{ total_huespedes }}</strong></article>
+            <article><span>Ingresos registrados</span><strong>${{ ingresos|floatformat:0 }}</strong></article>
+            <article><span>Ocupación</span><strong>{{ porcentaje_ocupacion|floatformat:1 }}%</strong></article>
+        </section>
+        {% endif %}
+
+        {% if not es_recepcionista %}
+        <section class="grafico-ocupacion" aria-labelledby="titulo-grafico-ocupacion">
+            <div class="grafico-ocupacion-cabecera">
+                <h2 id="titulo-grafico-ocupacion">Ocupación actual</h2>
+                <strong>{{ porcentaje_ocupacion|floatformat:1 }}%</strong>
+            </div>
+            <div class="barra-ocupacion"
+                 role="progressbar"
+                 aria-label="Porcentaje de habitaciones ocupadas"
+                 aria-valuemin="0"
+                 aria-valuemax="100"
+                 aria-valuenow="{{ porcentaje_ocupacion|floatformat:0 }}">
+                <span style="width: {{ porcentaje_ocupacion }}%"></span>
+            </div>
+            <p>{{ habitaciones_ocupadas }} de {{ total_habitaciones }} habitaciones ocupadas</p>
+        </section>
+        {% endif %}
+
+        <section class="banner">
+            <small>GESTIÓN HOTELERA · {{ rol_actual|upper }}</small>
+            {% if es_gerente %}
+                <h2>Supervisa el desempeño de tu hotel.</h2>
+                <p>Consulta la ocupación, las reservas y los ingresos. El acceso de gerencia es de solo lectura.</p>
+            {% elif es_recepcionista %}
+                <h2>Tu jornada de recepción, organizada.</h2>
+                <p>Atiende las llegadas y salidas, registra huéspedes, confirma reservas y recibe pagos desde un solo lugar.</p>
+            {% else %}
+                <h2>Todo tu hotel, en un solo lugar.</h2>
+                <p>
+                    Administra usuarios, roles, habitaciones, huéspedes,
+                    reservas, pagos y servicios de Hotel Taroa desde un
+                    solo lugar.
+                </p>
+            {% endif %}
+        </section>
+
+        <section class="alertas-reservas" aria-label="Avisos de reservas">
+            <div class="aviso-pendientes {% if reservas_pendientes %}aviso-pendientes-activo{% endif %}">
+                <div>
+                    <span class="aviso-pendientes-etiqueta">Pendientes de confirmación</span>
+                    <strong>{{ reservas_pendientes }}</strong>
+                    {% if reservas_pendientes_hoy %}
+                        <p>{{ reservas_pendientes_hoy }} cliente(s) llegan hoy y esperan confirmación.</p>
+                    {% elif reservas_pendientes %}
+                        <p>Revisa las solicitudes pendientes antes de la llegada de los huéspedes.</p>
+                    {% else %}
+                        <p>No hay reservas pendientes por confirmar.</p>
+                    {% endif %}
+                    {% if reservas_pendientes_lista %}
+                        <ul class="lista-pendientes">
+                            {% for reserva in reservas_pendientes_lista %}
+                                <li>
+                                    <strong>{{ reserva.huesped.nombres }} {{ reserva.huesped.apellidos }}</strong>
+                                    <span>Entrada: {{ reserva.fecha_entrada|date:"d/m/Y" }} · Habitación {{ reserva.habitacion.numero }}</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                <a href="{% url 'reservas' %}?estado=PENDIENTE">Revisar reservas pendientes</a>
+            </div>
+
+            <section class="tabla-gerencia tabla-llegadas" aria-label="Llegadas de hoy y próximas">
+                <div class="tabla-gerencia-titulo">
+                    <div>
+                        <h2>Llegadas de hoy y próximas</h2>
+                        <p>{{ reservas_hoy }} llegada(s) para hoy · próximas entradas desde hoy</p>
+                    </div>
+                    <a href="{% url 'reservas' %}">Ver todas las reservas</a>
+                </div>
+                <div class="tabla-gerencia-contenedor">
+                    <table>
+                        <thead>
+                            <tr><th>Fecha de llegada</th><th>Huésped</th><th>Habitación</th><th>Estado</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for reserva in proximas_entradas %}
+                                <tr class="{% if reserva.estado == 'PENDIENTE' %}fila-reserva-pendiente{% endif %}">
+                                    <td>
+                                        {% if reserva.fecha_entrada == fecha_actual %}
+                                            <strong class="etiqueta-llega-hoy">Llega hoy</strong>
+                                        {% else %}
+                                            {{ reserva.fecha_entrada|date:"d/m/Y" }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ reserva.huesped.nombres }} {{ reserva.huesped.apellidos }}</td>
+                                    <td>{{ reserva.habitacion.numero }}</td>
+                                    <td>
+                                        {% if reserva.estado == "PENDIENTE" %}
+                                            <span class="estado-reserva-pendiente">Pendiente de confirmar</span>
+                                        {% else %}
+                                            {{ reserva.get_estado_display }}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr><td colspan="4">No hay llegadas programadas desde hoy.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
+
+        {% if es_recepcionista %}
+        <section class="tabla-gerencia tabla-recepcion" aria-label="Salidas de hoy">
+            <div class="tabla-gerencia-titulo">
+                <div>
+                    <h2>Salidas de hoy · {{ fecha_actual|date:"d/m/Y" }}</h2>
+                    <p>Huéspedes que deben completar el check-out.</p>
+                </div>
+                <a href="{% url 'reservas' %}">Ver reservas</a>
+            </div>
+            <div class="tabla-gerencia-contenedor">
+                <table>
+                    <thead>
+                        <tr><th>Huésped</th><th>Habitación</th><th>Fecha de salida</th><th>Estado</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for reserva in salidas_hoy_lista %}
+                            <tr>
+                                <td>{{ reserva.huesped.nombres }} {{ reserva.huesped.apellidos }}</td>
+                                <td>{{ reserva.habitacion.numero }}</td>
+                                <td>{{ reserva.fecha_salida|date:"d/m/Y" }}</td>
+                                <td>{{ reserva.get_estado_display }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4">No hay salidas programadas para hoy.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="acciones-recepcion" aria-label="Accesos rápidos de recepción">
+            <a href="{% url 'servicios' %}">Consultar servicios</a>
+            <a href="{% url 'reserva_crear' %}">+ Nueva reserva</a>
+            <a href="{% url 'huesped_crear' %}">+ Registrar huésped</a>
+            <a href="{% url 'pago_crear' %}">+ Registrar pago</a>
+        </section>
+        {% endif %}
+
+        {% if es_gerente %}
+        <section class="resumen-gerencia" aria-label="Resumen de gerencia">
+            <article class="resumen-gerencia-ingresos">
+                <span>Ingresos recaudados este mes</span>
+                <strong>${{ ingresos_mes|floatformat:0 }}</strong>
+                <small>Pagos registrados durante el mes actual</small>
+            </article>
+            <div class="resumen-gerencia-enlaces">
+                <a href="{% url 'reportes' %}">Ver reportes completos</a>
+                <a href="{% url 'reservas' %}">Consultar reservas</a>
+                <a href="{% url 'pagos' %}">Consultar pagos</a>
+                <a href="{% url 'servicios' %}">Consultar servicios</a>
+            </div>
+        </section>
+
+        {% endif %}
+
+        {% if not es_gerente %}
+        <h2 class="seccion-titulo">{% if es_recepcionista %}Atención al huésped{% else %}Resumen de gestión{% endif %}</h2>
+
+        <section class="tarjetas">
+
+            {% if puede_administrar %}
+            <a href="{% url 'habitaciones' %}" class="tarjeta">
+                <div class="tarjeta-icono">▣</div>
+                <p>Habitaciones</p>
+                <h3>Gestionar</h3>
+                <small>Habitaciones y disponibilidad</small>
+            </a>
+
+            {% endif %}
+            {% if puede_operar %}
+            <a href="{% url 'huespedes' %}" class="tarjeta">
+                <div class="tarjeta-icono">♙</div>
+                <p>Huéspedes</p>
+                <h3>Consultar</h3>
+                <small>Información de los huéspedes</small>
+            </a>
+
+            {% endif %}
+            <a href="{% url 'reservas' %}" class="tarjeta">
+                <div class="tarjeta-icono">▤</div>
+                <p>Reservas</p>
+                <h3>Consultar</h3>
+                <small>Reservas del establecimiento</small>
+            </a>
+
+            {% if puede_operar or rol_actual == "Gerente" %}
+            <a href="{% url 'pagos' %}" class="tarjeta">
+                <div class="tarjeta-icono">$</div>
+                <p>Pagos</p>
+                <h3>Consultar</h3>
+                <small>Información de los pagos</small>
+            </a>
+            {% endif %}
+
+        </section>
+
+        {% if puede_administrar %}
+        <h2 class="seccion-titulo">Administración del sistema</h2>
+        {% elif es_gerente %}
+        <h2 class="seccion-titulo">Accesos de consulta</h2>
+        {% endif %}
+        {% else %}
+        <h2 class="seccion-titulo">Accesos de consulta</h2>
+        {% endif %}
+
+        {% if puede_administrar or es_gerente %}
+        <section class="accesos">
+
+            {% if puede_administrar %}
+            <a href="{% url 'usuarios' %}" class="acceso">
+                <div class="icono">👤</div>
+                <h3>Administrar usuarios</h3>
+                <p>Gestiona las cuentas que pueden ingresar al sistema.</p>
+                <span class="flecha">Ingresar →</span>
+            </a>
+
+            <a href="{% url 'roles' %}" class="acceso">
+                <div class="icono">🛡️</div>
+                <h3>Administrar roles</h3>
+                <p>Consulta y configura los roles de los usuarios.</p>
+                <span class="flecha">Ingresar →</span>
+            </a>
+
+            <a href="{% url 'tipos_habitacion' %}" class="acceso">
+                <div class="icono">🛏️</div>
+                <h3>Tipos de habitación</h3>
+                <p>Gestiona las categorías de las habitaciones.</p>
+                <span class="flecha">Ingresar →</span>
+            </a>
+
+            <a href="{% url 'servicios' %}" class="acceso">
+                <div class="icono">✨</div>
+                <h3>Administrar servicios</h3>
+                <p>Organiza los servicios ofrecidos por el hotel.</p>
+                <span class="flecha">Ingresar →</span>
+            </a>
+
+            <a href="{% url 'alojamiento_configurar' %}" class="acceso">
+                <div class="icono">🏨</div>
+                <h3>Información del hotel</h3>
+                <p>Consulta y modifica los datos del establecimiento.</p>
+                <span class="flecha">Ingresar →</span>
+            </a>
+
+            {% endif %}
+            {% if puede_administrar or rol_actual == "Gerente" %}
+            <a href="{% url 'reportes' %}" class="acceso">
+                <div class="icono">📊</div>
+                <h3>Reportes</h3>
+                <p>Consulta ingresos, ocupación, reservas, huéspedes y servicios vendidos.</p>
+                <span class="flecha">Ingresar →</span>
+            </a>
+            {% endif %}
+
+        </section>
+        {% endif %}
+
+        <footer class="pie">
+            © 2026 Hotel Taroa · Sistema de gestión hotelera
+            <br><br>
+            Riohacha, La Guajira, Colombia
+        </footer>
+
+    </main>
+</div>
+
+</body>
+</html>

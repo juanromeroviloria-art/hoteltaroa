@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inicio | Hotel Taroa{% endblock %}
+
+{% block content %}
+
+<style>
+.habitaciones-inicio {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 48px 22px;
+    color: #49372b;
+}
+
+.habitaciones-inicio h2 {
+    margin: 0 0 10px;
+    text-align: center;
+    font-size: clamp(26px, 4vw, 36px);
+}
+
+.habitaciones-inicio-intro {
+    margin: 0 auto 28px;
+    color: #78685c;
+    text-align: center;
+}
+
+.habitaciones-inicio-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 22px;
+}
+
+.habitacion-inicio {
+    overflow: hidden;
+    border: 1px solid #eadfd5;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 5px 20px rgba(83, 55, 32, .07);
+}
+
+.habitacion-inicio img {
+    display: block;
+    width: 100%;
+    height: 190px;
+    object-fit: cover;
+    background: #965725;
+}
+
+.habitacion-inicio-info {
+    padding: 18px;
+}
+
+.habitacion-inicio-info h3 {
+    margin: 0 0 10px;
+    font-size: 20px;
+}
+
+.habitacion-inicio-info p {
+    margin: 5px 0;
+    color: #78685c;
+    font-size: 14px;
+}
+
+.habitacion-inicio-info .precio {
+    margin: 14px 0;
+    color: #b96f3c;
+    font-size: 21px;
+    font-weight: bold;
+}
+
+.habitacion-inicio-info .precio small {
+    color: #78685c;
+    font-size: 13px;
+    font-weight: normal;
+}
+
+.reservar-inicio {
+    display: block;
+    padding: 12px;
+    border-radius: 8px;
+    background: #c98250;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    text-decoration: none;
+}
+
+.reservar-inicio:hover {
+    background: #a96336;
+    color: white;
+}
+
+.habitaciones-inicio-vacio {
+    grid-column: 1 / -1;
+    padding: 26px;
+    border: 1px dashed #d8b99f;
+    border-radius: 12px;
+    color: #78685c;
+    text-align: center;
+}
+
+.habitaciones-inicio-todas {
+    margin-top: 24px;
+    text-align: center;
+}
+
+@media (max-width: 600px) {
+    .habitaciones-inicio {
+        padding: 32px 14px;
+    }
+}
+
+
+
+
+
+/* =========================================
+   MODO OSCURO - HABITACIONES DE INICIO
+   ========================================= */
+
+html[data-tema="oscuro"] .habitaciones-inicio {
+    background: #34312F !important;
+    color: #FFFFFF !important;
+}
+
+html[data-tema="oscuro"] .habitaciones-inicio h2 {
+    color: #F0C5A5 !important;
+}
+
+html[data-tema="oscuro"] .habitaciones-inicio-intro {
+    color: #F0E5DC !important;
+}
+
+html[data-tema="oscuro"] .habitaciones-inicio-grid {
+    background: transparent !important;
+}
+
+html[data-tema="oscuro"] .habitacion-inicio {
+    background: #49433F !important;
+    border: 1px solid #75675D !important;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, .20);
+}
+
+html[data-tema="oscuro"] .habitacion-inicio-info {
+    background: #49433F !important;
+    color: #FFFFFF !important;
+}
+
+html[data-tema="oscuro"] .habitacion-inicio-info h3 {
+    color: #F0C5A5 !important;
+}
+
+html[data-tema="oscuro"] .habitacion-inicio-info p,
+html[data-tema="oscuro"] .habitacion-inicio-info strong {
+    color: #FFFFFF !important;
+}
+
+html[data-tema="oscuro"] .habitacion-inicio-info .precio {
+    color: #F0A36D !important;
+}
+
+html[data-tema="oscuro"] .habitacion-inicio-info .precio small {
+    color: #F0E5DC !important;
+}
+
+html[data-tema="oscuro"] .reservar-inicio {
+    background: #C98250 !important;
+    color: #FFFFFF !important;
+}
+
+html[data-tema="oscuro"] .habitaciones-inicio-vacio {
+    background: #49433F !important;
+    color: #FFFFFF !important;
+    border-color: #88796E !important;
+}
+
+html[data-tema="oscuro"] .habitaciones-inicio-todas a {
+    color: #F0C5A5 !important;
+}
+
+</style>
+
+
+
+
+<section class="portada">
+    <img
+        class="portada-imagen"
+        src="{{ imagen_alojamiento }}"
+         alt=""
+         aria-hidden="true"
+         fetchpriority="high"
+    >
+    <div class="portada-contenido">
+        <p class="subtitulo">BIENVENIDO A RIOHACHA</p>
+
+        <h1>Vive una experiencia inolvidable en Hotel Taroa</h1>
+
+        <p>
+            Descubre la comodidad, el descanso y la hospitalidad
+            que tenemos preparados para ti en La Guajira.
+        </p>
+
+        <div class="portada-botones">
+           <a href="{% url 'habitaciones_cliente' %}" class="boton-principal">
+             Ver habitaciones
+             </a>
+
+            {% if not request.user.is_authenticated %}
+                <a href="{% url 'registro_cliente' %}" class="boton-secundario">
+                  Crear cuenta
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="habitaciones-inicio" id="habitaciones">
+    <h2>Habitaciones disponibles</h2>
+    <p class="habitaciones-inicio-intro">
+        Explora nuestras habitaciones. La disponibilidad depende de las fechas que elijas al reservar.
+    </p>
+    <div class="habitaciones-inicio-grid">
+        {% for habitacion in habitaciones_disponibles %}
+        <article class="habitacion-inicio">
+            {% if habitacion.foto %}
+                <img src="{{ habitacion.foto.url }}" alt="Habitación {{ habitacion.numero }} - {{ habitacion.tipo.nombre }}" loading="lazy">
+            {% elif forloop.counter|divisibleby:2 %}
+                <img src="{% static 'img/habitacion-clasica.jpg' %}" alt="Habitación {{ habitacion.numero }} - {{ habitacion.tipo.nombre }}" loading="lazy">
+            {% else %}
+                <img src="{% static 'img/habitacion-moderna.jpg' %}" alt="Habitación {{ habitacion.numero }} - {{ habitacion.tipo.nombre }}" loading="lazy">
+            {% endif %}
+            <div class="habitacion-inicio-info">
+                <h3>Habitación {{ habitacion.numero }}</h3>
+                <p><strong>Tipo:</strong> {{ habitacion.tipo.nombre }}</p>
+                <p><strong>Capacidad:</strong> {{ habitacion.tipo.capacidad }} huéspedes</p>
+                <p><strong>Alojamiento:</strong> {{ habitacion.alojamiento.nombre }}</p>
+                <p class="precio">${{ habitacion.precio|floatformat:0 }} <small>por noche</small></p>
+                <a class="reservar-inicio" href="{% url 'reserva_cliente' %}?habitacion={{ habitacion.id }}">
+                    Reservar habitación
+                </a>
+            </div>
+        </article>
+        {% empty %}
+        <p class="habitaciones-inicio-vacio">En este momento no hay habitaciones disponibles. Vuelve pronto para consultar nuevas opciones.</p>
+        {% endfor %}
+    </div>
+    <p class="habitaciones-inicio-todas">
+        <a href="{% url 'habitaciones_cliente' %}">Ver todas las habitaciones disponibles</a>
+    </p>
+</section>
+
+<section class="bienvenida">
+    <h2>Tu descanso comienza aquí</h2>
+
+    <p>
+        Consulta nuestras habitaciones, encuentra la opción ideal
+        para tu estadía y administra tus reservas desde nuestra plataforma.
+    </p>
+</section>
+
+{% endblock %}

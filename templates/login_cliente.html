@@ -1,0 +1,69 @@
+
+{% extends 'base.html' %}
+
+{% block title %}Iniciar sesión | Hotel Taroa{% endblock %}
+
+{% block content %}
+<section class="seccion-login-cliente">
+    <div class="tarjeta-login-cliente">
+
+        <div class="encabezado-login-cliente">
+            <h1>Bienvenido a Hotel Taroa</h1>
+            <p>Ingresa a tu cuenta para gestionar tus reservas.</p>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mensaje-login {{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" action="{% url 'login_cliente' %}">
+            {% csrf_token %}
+            {% if siguiente %}
+                <input type="hidden" name="next" value="{{ siguiente }}">
+            {% endif %}
+
+            <div class="campo-login-cliente">
+                <label for="usuario">Usuario o correo electrónico</label>
+                <input
+                    type="text"
+                    id="usuario"
+                    name="usuario"
+                    placeholder="Ingresa tu usuario o correo"
+                    autocomplete="username"
+                    required
+                >
+            </div>
+
+            <div class="campo-login-cliente">
+                <label for="contrasena">Contraseña</label>
+                <input
+                    type="password"
+                    id="contrasena"
+                    name="contrasena"
+                    placeholder="Ingresa tu contraseña"
+                    autocomplete="current-password"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="boton-login-cliente">
+                Iniciar sesión
+            </button>
+        </form>
+
+        <p class="texto-registro-cliente">
+            ¿Todavía no tienes cuenta?
+            <a href="{% url 'registro_cliente' %}">Regístrate aquí</a>
+        </p>
+
+        <a href="{% url 'inicio' %}" class="volver-inicio-cliente">
+            Volver al inicio
+        </a>
+
+    </div>
+</section>
+{% endblock %}

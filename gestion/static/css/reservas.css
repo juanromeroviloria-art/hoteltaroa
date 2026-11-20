@@ -1,0 +1,242 @@
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #FDFBF8;
+    color: #44362E;
+}
+
+.encabezado {
+    background: #FFFFFF;
+    border-bottom: 1px solid #E6C2A3;
+    padding: 22px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.encabezado h1 {
+    color: #C98250;
+    margin: 0 0 5px;
+}
+
+.encabezado p {
+    margin: 0;
+    color: #806B5D;
+}
+
+.contenedor {
+    width: 90%;
+    max-width: 1250px;
+    margin: 35px auto;
+}
+
+.titulo-seccion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.titulo-seccion h2 {
+    margin: 0 0 8px;
+    color: #C98250;
+}
+
+.titulo-seccion p {
+    margin: 0;
+    color: #806B5D;
+}
+
+.btn-principal,
+.btn-volver,
+.btn-cancelar,
+.btn-editar,
+.btn-eliminar {
+    display: inline-block;
+    padding: 11px 16px;
+    border: none;
+    border-radius: 7px;
+    text-decoration: none;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-principal {
+    background: #C98250;
+    color: #FFFFFF;
+}
+
+.btn-principal:hover {
+    background: #B66F40;
+}
+
+.btn-volver,
+.btn-cancelar {
+    background: #F5E6D9;
+    color: #8B5838;
+}
+
+.btn-volver:hover,
+.btn-cancelar:hover {
+    background: #EED5C0;
+}
+
+.tabla-contenedor {
+    background: #FFFFFF;
+    border: 1px solid #E6C2A3;
+    border-radius: 12px;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 850px;
+}
+
+thead {
+    background: #F5E6D9;
+}
+
+th,
+td {
+    padding: 15px 12px;
+    text-align: left;
+    border-bottom: 1px solid #F0E5DC;
+}
+
+th {
+    color: #80563B;
+    font-size: 13px;
+}
+
+td {
+    font-size: 14px;
+}
+
+.estado {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 20px;
+    background: #F5E6D9;
+    color: #8B5838;
+    font-size: 12px;
+}
+
+.acciones {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.acciones form {
+    margin: 0;
+}
+
+.btn-editar {
+    background: #F5E6D9;
+    color: #80563B;
+}
+
+.btn-eliminar {
+    background: #F8E3DF;
+    color: #A94438;
+}
+
+.vacio {
+    text-align: center;
+    padding: 35px;
+    color: #806B5D;
+}
+
+.mensaje {
+    margin-bottom: 20px;
+    padding: 13px;
+    border-radius: 8px;
+    background: #F5E6D9;
+    color: #80563B;
+}
+
+.formulario-contenedor {
+    max-width: 850px;
+}
+
+.formulario {
+    padding: 28px;
+    background: #FFFFFF;
+    border: 1px solid #E6C2A3;
+    border-radius: 12px;
+}
+
+.campo {
+    margin-bottom: 20px;
+}
+
+.campo label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #80563B;
+}
+
+.campo input,
+.campo select,
+.campo textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #DEC5B2;
+    border-radius: 7px;
+    background: #FFFFFF;
+    color: #44362E;
+    font-size: 14px;
+}
+
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus {
+    outline: 2px solid #E6C2A3;
+    border-color: #C98250;
+}
+
+.errores {
+    margin-top: 6px;
+    color: #A94438;
+    font-size: 13px;
+}
+
+.errores ul {
+    margin: 5px 0;
+    padding-left: 20px;
+}
+
+.botones-formulario {
+    display: flex;
+    gap: 12px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 650px) {
+    .encabezado,
+    .titulo-seccion {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .contenedor {
+        width: 94%;
+        margin: 22px auto;
+    }
+
+    .formulario {
+        padding: 18px;
+    }
+}

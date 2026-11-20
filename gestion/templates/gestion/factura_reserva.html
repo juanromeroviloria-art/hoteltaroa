@@ -1,0 +1,196 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura de reserva #{{ reserva.id }} | Hotel Taroa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #fdfbf8; color: #44382f; }
+        .factura { max-width: 950px; margin: 35px auto; padding: 30px; border: 1px solid #e6c2a3; border-radius: 14px; background: #fff; box-shadow: 0 8px 25px rgba(100, 65, 40, .07); }
+        h1, h2 { color: #9b6039; }
+        .total { font-size: 1.2rem; font-weight: 700; }
+        .saldo { color: #a3442d; font-size: 1.3rem; font-weight: 700; }
+        .pagada { color: #287348; font-size: 1.2rem; font-weight: 700; }
+        .acciones { display: flex; flex-wrap: wrap; gap: 10px; }
+        @media print { .no-imprimir { display: none !important; } .factura { margin: 0 auto; border: 0; box-shadow: none; } body { background: white; } }
+    </style>
+</head>
+<body>
+    <main class="factura">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <header class="d-flex justify-content-between align-items-start gap-3 mb-4">
+            <div>
+                <p class="mb-1 text-uppercase small">Hotel Taroa · Riohacha</p>
+                <h1 class="h2">Factura de estadía</h1>
+                <p class="mb-0">Reserva #{{ reserva.id }} · {{ reserva.get_estado_display }}</p>
+            </div>
+            <button type="button" class="btn btn-outline-secondary no-imprimir" onclick="window.print()">Imprimir</button>
+        </header>
+
+        <section class="row g-3 mb-4">
+            <div class="col-md-6">
+                <strong>Huésped:</strong> {{ reserva.huesped }}
+            </div>
+
+            <div class="col-md-6">
+                <strong>Documento:</strong>
+                {{ reserva.huesped.tipo_documento }}
+                {{ reserva.huesped.numero_documento }}
+            </div>
+
+            <div class="col-md-6">
+                <strong>Habitación:</strong>
+                {{ reserva.habitacion.numero }} ·
+                {{ reserva.habitacion.tipo.nombre }}
+            </div>
+
+            <div class="col-md-6">
+                <strong>Estadía:</strong>
+                {{ reserva.fecha_entrada|date:"d/m/Y" }} al
+                {{ reserva.fecha_salida|date:"d/m/Y" }}
+                ({{ reserva.noches }} noche(s))
+            </div>
+
+            <div class="col-md-4">
+                <strong>Adultos:</strong>
+                {{ reserva.cantidad_huespedes }}
+            </div>
+
+            <div class="col-md-4">
+                <strong>Niños:</strong>
+                {{ reserva.cantidad_ninos }}
+            </div>
+
+            <div class="col-md-4">
+                <strong>Total de personas:</strong>
+                {{ reserva.cantidad_huespedes|add:reserva.cantidad_ninos }}
+            </div>
+        </section>
+
+        <section class="mb-4">
+            <h2 class="h5">Detalle de cargos</h2>
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th>Área / detalle</th>
+                            <th>Cantidad</th>
+                            <th>Precio unitario</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Alojamiento</td>
+                            <td>{{ reserva.noches }} noche(s)</td>
+                            <td>{{ reserva.noches }}</td>
+                            <td>${{ reserva.precio_noche|floatformat:2 }}</td>
+                            <td>${{ total_alojamiento|floatformat:2 }}</td>
+                        </tr>
+
+                        {% for linea in reserva.servicios.all %}
+                            <tr>
+                                <td>{{ linea.servicio.nombre }}</td>
+                                <td>{{ linea.servicio.get_area_display }} · Servicio de reserva</td>
+                                <td>{{ linea.cantidad }}</td>
+                                <td>${{ linea.precio_unitario|floatformat:2 }}</td>
+                                <td>${{ linea.subtotal|floatformat:2 }}</td>
+                            </tr>
+                        {% endfor %}
+
+                        {% for consumo in reserva.consumos.all %}
+                            <tr>
+                                <td>{{ consumo.servicio.nombre }}</td>
+                                <td>{{ consumo.get_area_display }} · {{ consumo.fecha|date:"d/m/Y H:i" }}</td>
+                                <td>{{ consumo.cantidad }}</td>
+                                <td>${{ consumo.precio_unitario|floatformat:2 }}</td>
+                                <td>${{ consumo.subtotal|floatformat:2 }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="mb-4">
+            <h2 class="h5">Pagos recibidos</h2>
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Método</th>
+                            <th>Referencia</th>
+                            <th class="text-end">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pago in reserva.pagos.all %}
+                            <tr>
+                                <td>{{ pago.fecha|date:"d/m/Y H:i" }}</td>
+                                <td>{{ pago.metodo }}</td>
+                                <td>{{ pago.referencia|default:"—" }}</td>
+                                <td class="text-end">${{ pago.valor|floatformat:2 }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-secondary">
+                                    No hay pagos registrados.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="row justify-content-end text-end mb-4">
+            <div class="col-md-5">
+                <p class="mb-1">
+                    Total de la factura:
+                    <span class="total">${{ reserva.valor_total|floatformat:2 }}</span>
+                </p>
+
+                <p class="mb-1">
+                    Total pagado: ${{ reserva.valor_pagado|floatformat:2 }}
+                </p>
+
+                {% if reserva.saldo_pendiente > 0 %}
+                    <p class="saldo mb-0">
+                        Saldo pendiente: ${{ reserva.saldo_pendiente|floatformat:2 }}
+                    </p>
+                {% else %}
+                    <p class="pagada mb-0">Cuenta pagada</p>
+                {% endif %}
+            </div>
+        </section>
+
+        <nav class="acciones no-imprimir">
+            {% if es_cliente %}
+                <a class="btn btn-outline-secondary" href="{% url 'historial_reservas' %}">
+                    Volver a mi historial
+                </a>
+            {% else %}
+                <a class="btn btn-outline-secondary" href="{% url 'reservas' %}">
+                    Volver a reservas
+                </a>
+            {% endif %}
+
+            {% if puede_operar and reserva.saldo_pendiente > 0 %}
+                <a class="btn btn-primary" href="{% url 'pago_crear' %}?reserva={{ reserva.id }}">
+                    Cobrar saldo pendiente
+                </a>
+            {% endif %}
+        </nav>
+    </main>
+</body>
+</html>

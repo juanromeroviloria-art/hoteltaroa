@@ -1,0 +1,52 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ titulo }} | Hotel Taroa</title>
+    <link rel="stylesheet" href="{% static 'css/reservas.css' %}">
+</head>
+<body>
+    <header class="encabezado">
+        <div>
+            <h1>Hotel Taroa</h1>
+            <p>Gestión de reservas</p>
+        </div>
+        <a href="{% url 'panel' %}" class="btn-volver">← Volver al panel</a>
+    </header>
+
+    <main class="contenedor formulario-contenedor">
+        <div class="titulo-seccion">
+            <div>
+                <h2>{{ titulo }}</h2>
+                <p>Completa los datos de la reserva.</p>
+            </div>
+        </div>
+
+        <form method="post" class="formulario">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="errores">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            {% for campo in form %}
+                <div class="campo">
+                    <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                    {{ campo }}
+                    {% if campo.errors %}
+                        <div class="errores">{{ campo.errors }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <div class="botones-formulario">
+                <button type="submit" class="btn-principal">{{ boton }}</button>
+                <a href="{% url 'reservas' %}" class="btn-cancelar">Cancelar</a>
+            </div>
+        </form>
+    </main>
+</body>
+</html>

@@ -1,0 +1,54 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ titulo }} | Hotel Taroa</title>
+    <link rel="stylesheet" href="{% static 'css/roles.css' %}">
+</head>
+<body>
+    <main class="formulario-contenedor">
+        <a href="{% url 'panel' %}" class="volver">← Volver al panel principal</a>
+
+        <section class="formulario-tarjeta">
+            <p class="subtitulo">HOTEL TAROA</p>
+            <h1>{{ titulo }}</h1>
+            <p class="descripcion">Completa la información del rol.</p>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="mensaje {{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <label for="nombre">Nombre del rol</label>
+                <input
+                    type="text"
+                    id="nombre"
+                    name="nombre"
+                    maxlength="50"
+                    required
+                    value="{{ rol.nombre|default:'' }}"
+                    placeholder="Ej. Recepcionista"
+                >
+
+                <label for="descripcion">Descripción</label>
+                <textarea
+                    id="descripcion"
+                    name="descripcion"
+                    rows="4"
+                    placeholder="Describe las funciones de este rol"
+                >{{ rol.descripcion|default:'' }}</textarea>
+
+                <div class="botones">
+                    <a href="{% url 'roles' %}" class="boton boton-secundario">Cancelar</a>
+                    <button type="submit" class="boton boton-principal">Guardar rol</button>
+                </div>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

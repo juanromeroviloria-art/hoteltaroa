@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagos | Hotel Taroa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/pagos.css' %}">
+</head>
+<body>
+    <header class="encabezado">
+        <div>
+            <h1>Hotel Taroa</h1>
+            <p>Gestión de pagos</p>
+        </div>
+        <a href="{% url 'panel' %}" class="btn-volver">← Volver al panel</a>
+    </header>
+
+    <main class="contenedor">
+        <section class="titulo-seccion">
+            <div>
+                <h2>Pagos registrados</h2>
+                <p>Consulta y administra los pagos de las reservas.</p>
+            </div>
+            {% if puede_operar %}
+                <a href="{% url 'pago_crear' %}" class="btn-principal">+ Registrar pago</a>
+            {% endif %}
+        </section>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mensaje">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <section class="tabla-contenedor">
+            <table>
+                <thead>
+                    <tr>
+                        <th>N.º de pago</th>
+                        <th>Huésped</th>
+                        <th>Habitación</th>
+                        <th>Valor</th>
+                        <th>Saldo de la reserva</th>
+                        <th>Método</th>
+                        <th>Fecha</th>
+                        <th>Referencia</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pago in pagos %}
+                    <tr>
+                        <td>#{{ pago.id }}</td>
+                        <td>
+                            {{ pago.reserva.huesped.nombres }}
+                            {{ pago.reserva.huesped.apellidos }}
+                        </td>
+                        <td>{{ pago.reserva.habitacion.numero }}</td>
+                        <td>${{ pago.valor|floatformat:2 }}</td>
+                        <td>${{ pago.reserva.saldo_pendiente|floatformat:2 }}</td>
+                        <td>{{ pago.metodo }}</td>
+                        <td>{{ pago.fecha|date:"d/m/Y H:i" }}</td>
+                        <td>{{ pago.referencia|default:"—" }}</td>
+                        <td class="acciones">
+                            {% if puede_administrar %}
+                            <a href="{% url 'pago_editar' pago.id %}"
+                               class="btn-editar">Editar</a>
+
+                            <form method="post"
+                                  action="{% url 'pago_eliminar' pago.id %}"
+                                  onsubmit="return confirm('¿Deseas eliminar este pago?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn-eliminar">
+                                    Eliminar
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="vacio">
+                            Todavía no hay pagos registrados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+        {% if pagos.has_other_pages %}
+        <nav class="mt-3" aria-label="Paginación">
+            <ul class="pagination">
+                {% if pagos.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ pagos.previous_page_number }}">Anterior</a></li>{% endif %}
+                <li class="page-item disabled"><span class="page-link">Página {{ pagos.number }} de {{ pagos.paginator.num_pages }}</span></li>
+                {% if pagos.has_next %}<li class="page-item"><a class="page-link" href="?page={{ pagos.next_page_number }}">Siguiente</a></li>{% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </main>
+</body>
+</html>

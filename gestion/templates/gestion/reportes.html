@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes | Hotel Taroa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/reportes.css' %}">
+</head>
+<body>
+    <header class="encabezado">
+        <div>
+            <h1>Hotel Taroa</h1>
+            <p>Informes y estadísticas</p>
+        </div>
+        <a href="{% url 'panel' %}" class="btn-volver">← Volver al panel</a>
+    </header>
+
+    <main class="contenedor">
+        <section class="introduccion">
+            <h2>Reportes generales</h2>
+            <p>Resumen de la información registrada en el sistema hotelero.</p>
+        </section>
+
+        <form method="get" class="row g-2 align-items-end mb-4">
+            <div class="col-md-2">
+                <label class="form-label" for="desde">Desde</label>
+                <input class="form-control" type="date" id="desde" name="desde" value="{{ desde }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="hasta">Hasta</label>
+                <input class="form-control" type="date" id="hasta" name="hasta" value="{{ hasta }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="estado">Estado</label>
+                <select class="form-select" id="estado" name="estado">
+                    <option value="">Todos</option>
+                    {% for valor, etiqueta in estados_reserva %}
+                        <option value="{{ valor }}" {% if estado_filtro == valor %}selected{% endif %}>{{ etiqueta }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="habitacion">Habitación</label>
+                <select class="form-select" id="habitacion" name="habitacion">
+                    <option value="">Todas</option>
+                    {% for habitacion in habitaciones_filtro %}
+                        <option value="{{ habitacion.id }}" {% if habitacion_filtro == habitacion.id|stringformat:"s" %}selected{% endif %}>
+                            {{ habitacion.alojamiento.nombre }} · {{ habitacion.numero }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label" for="huesped">Huésped</label>
+                <select class="form-select" id="huesped" name="huesped">
+                    <option value="">Todos</option>
+                    {% for huesped in huespedes_filtro %}
+                        <option value="{{ huesped.id }}" {% if huesped_filtro == huesped.id|stringformat:"s" %}selected{% endif %}>
+                            {{ huesped.apellidos }}, {{ huesped.nombres }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12"><button class="btn btn-primary">Aplicar filtros</button></div>
+        </form>
+
+        {% if messages %}{% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}{% endif %}
+
+        <section class="tarjetas">
+            <article class="tarjeta">
+                <span>Habitaciones</span>
+                <strong>{{ total_habitaciones }}</strong>
+                <small>Total registrado</small>
+            </article>
+
+            <article class="tarjeta">
+                <span>Huéspedes</span>
+                <strong>{{ total_huespedes }}</strong>
+                <small>Total registrado</small>
+            </article>
+
+            <article class="tarjeta">
+                <span>Reservas</span>
+                <strong>{{ total_reservas }}</strong>
+                <small>Total registrado</small>
+            </article>
+
+            <article class="tarjeta">
+                <span>Pagos registrados</span>
+                <strong>{{ total_pagos }}</strong>
+                <small>En el periodo seleccionado</small>
+            </article>
+            <article class="tarjeta">
+                <span>Ocupación actual</span>
+                <strong>{{ porcentaje_ocupacion|floatformat:1 }}%</strong>
+                <small>{{ habitaciones_ocupadas }} ocupadas · {{ habitaciones_disponibles }} disponibles</small>
+            </article>
+            <article class="tarjeta">
+                <span>Saldo pendiente</span>
+                <strong>${{ saldo_pendiente|floatformat:2 }}</strong>
+                <small>Reservas con los filtros seleccionados</small>
+            </article>
+            <article class="tarjeta">
+                <span>Servicios vendidos</span>
+                <strong>{{ servicios_vendidos.unidades|default:0 }}</strong>
+                <small>${{ servicios_vendidos.ingresos|default:0|floatformat:2 }} facturados</small>
+            </article>
+            <article class="tarjeta">
+                <span>Consumos del hotel</span>
+                <strong>{{ consumos_vendidos.unidades|default:0 }}</strong>
+                <small>${{ consumos_vendidos.ingresos|default:0|floatformat:2 }} cargados a reservas</small>
+            </article>
+        </section>
+
+        <section class="resumen-financiero">
+            <div>
+                <h3>Ingresos recaudados en el periodo</h3>
+                <p class="valor">${{ valor_total_pagos|floatformat:2 }}</p>
+                <small>Corresponde a los pagos guardados en el sistema; no necesariamente al saldo total de las reservas.</small>
+            </div>
+        </section>
+
+        <section class="tabla-seccion">
+            <div class="titulo-tabla"><h3>Reporte de reservas</h3></div>
+            <div class="tabla-contenedor table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead><tr><th>Reserva</th><th>Huésped</th><th>Habitación</th><th>Fechas</th><th>Estado</th><th>Total</th><th>Pagado</th><th>Saldo</th></tr></thead>
+                    <tbody>
+                    {% for reserva in reservas_reporte %}
+                        <tr>
+                            <td>#{{ reserva.id }}</td>
+                            <td>{{ reserva.huesped }}</td>
+                            <td>{{ reserva.habitacion.numero }}</td>
+                            <td>{{ reserva.fecha_entrada|date:"d/m/Y" }} – {{ reserva.fecha_salida|date:"d/m/Y" }}</td>
+                            <td>{{ reserva.get_estado_display }}</td>
+                            <td>${{ reserva.valor_total|floatformat:2 }}</td>
+                            <td>${{ reserva.valor_pagado|floatformat:2 }}</td>
+                            <td>${{ reserva.saldo_pendiente|floatformat:2 }}</td>
+                        </tr>
+                    {% empty %}<tr><td colspan="8">No hay reservas para los filtros seleccionados.</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if reservas_reporte.has_other_pages %}
+            <nav aria-label="Paginación de reservas">
+                <ul class="pagination">
+                    {% if reservas_reporte.has_previous %}<li class="page-item"><a class="page-link" href="?desde={{ desde }}&hasta={{ hasta }}&estado={{ estado_filtro }}&habitacion={{ habitacion_filtro }}&huesped={{ huesped_filtro }}&page={{ reservas_reporte.previous_page_number }}">Anterior</a></li>{% endif %}
+                    <li class="page-item disabled"><span class="page-link">Página {{ reservas_reporte.number }} de {{ reservas_reporte.paginator.num_pages }}</span></li>
+                    {% if reservas_reporte.has_next %}<li class="page-item"><a class="page-link" href="?desde={{ desde }}&hasta={{ hasta }}&estado={{ estado_filtro }}&habitacion={{ habitacion_filtro }}&huesped={{ huesped_filtro }}&page={{ reservas_reporte.next_page_number }}">Siguiente</a></li>{% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </section>
+
+        <section class="tabla-seccion">
+            <div class="titulo-tabla"><h3>Huéspedes e historial de reservas</h3></div>
+            <div class="tabla-contenedor table-responsive">
+                <table class="table table-striped">
+                    <thead><tr><th>Huésped</th><th>Documento</th><th>Correo</th><th>Reservas registradas</th></tr></thead>
+                    <tbody>
+                    {% for huesped in huespedes_reporte %}
+                        <tr><td>{{ huesped }}</td><td>{{ huesped.tipo_documento }} {{ huesped.numero_documento }}</td><td>{{ huesped.correo|default:"—" }}</td><td>{{ huesped.cantidad_reservas }}</td></tr>
+                    {% empty %}<tr><td colspan="4">No hay huéspedes registrados.</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="estados">
+            <article class="estado-card">
+                <span>Reservas pendientes</span>
+                <strong>{{ reservas_pendientes }}</strong>
+            </article>
+            <article class="estado-card">
+                <span>Reservas confirmadas</span>
+                <strong>{{ reservas_confirmadas }}</strong>
+            </article>
+        </section>
+
+        <section class="tabla-seccion">
+            <div class="titulo-tabla">
+                <h3>Últimos pagos registrados</h3>
+                <a href="{% url 'pagos' %}" class="btn-secundario">Ver todos los pagos</a>
+            </div>
+
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>N.º de pago</th>
+                            <th>Huésped</th>
+                            <th>Habitación</th>
+                            <th>Método</th>
+                            <th>Fecha</th>
+                            <th>Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pago in pagos_recientes %}
+                        <tr>
+                            <td>#{{ pago.id }}</td>
+                            <td>
+                                {{ pago.reserva.huesped.nombres }}
+                                {{ pago.reserva.huesped.apellidos }}
+                            </td>
+                            <td>{{ pago.reserva.habitacion.numero }}</td>
+                            <td>{{ pago.metodo }}</td>
+                            <td>{{ pago.fecha|date:"d/m/Y H:i" }}</td>
+                            <td>${{ pago.valor|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="vacio">
+                                No hay pagos registrados todavía.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

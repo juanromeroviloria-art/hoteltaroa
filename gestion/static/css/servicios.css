@@ -1,0 +1,207 @@
+.servicios-contenedor,
+.formulario-contenedor {
+    max-width: 1200px;
+    margin: 35px auto;
+    padding: 28px;
+    background: #FFFFFF;
+    border: 1px solid #E6C2A3;
+    border-radius: 14px;
+    box-sizing: border-box;
+}
+
+.encabezado-servicios {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.encabezado-servicios h1,
+.formulario-contenedor h1 {
+    color: #C98250;
+    margin: 0 0 8px;
+}
+
+.encabezado-servicios p,
+.formulario-contenedor p {
+    color: #777;
+    margin-bottom: 20px;
+}
+
+.btn-principal,
+.btn-secundario,
+.btn-editar,
+.btn-eliminar {
+    display: inline-block;
+    border: none;
+    border-radius: 7px;
+    padding: 10px 15px;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-principal {
+    background: #C98250;
+    color: white;
+}
+
+.btn-principal:hover {
+    background: #B56F40;
+}
+
+.btn-secundario {
+    background: #F3EAE2;
+    color: #68452F;
+}
+
+.btn-editar {
+    background: #F6E5D6;
+    color: #89552F;
+}
+
+.btn-eliminar {
+    background: #F8E3DF;
+    color: #A43E32;
+}
+
+.tabla-contenedor {
+    overflow-x: auto;
+}
+
+.tabla-servicios {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabla-servicios th,
+.tabla-servicios td {
+    padding: 15px 12px;
+    text-align: left;
+    border-bottom: 1px solid #F0E3D8;
+}
+
+.tabla-servicios th {
+    background: #FDFBF8;
+    color: #805638;
+}
+
+.tabla-servicios tbody tr:hover {
+    background: #FFFAF5;
+}
+
+.acciones {
+    white-space: nowrap;
+}
+
+.estado {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.activo {
+    background: #E1F3E5;
+    color: #24723A;
+}
+
+.inactivo {
+    background: #F8E3DF;
+    color: #A43E32;
+}
+
+.vacio {
+    text-align: center !important;
+    color: #777;
+    padding: 30px !important;
+}
+
+.formulario-contenedor {
+    max-width: 700px;
+}
+
+.campo-formulario {
+    margin-bottom: 20px;
+}
+
+.campo-formulario label {
+    display: block;
+    margin-bottom: 8px;
+    color: #68452F;
+    font-weight: 600;
+}
+
+.campo-formulario input:not([type="checkbox"]),
+.campo-formulario textarea,
+.campo-formulario select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #E6C2A3;
+    border-radius: 7px;
+    box-sizing: border-box;
+    font: inherit;
+    background: #FFFFFF;
+}
+
+.campo-formulario input:focus,
+.campo-formulario textarea:focus,
+.campo-formulario select:focus {
+    outline: 2px solid #EBC5A5;
+    border-color: #C98250;
+}
+
+.botones-formulario {
+    display: flex;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.mensaje,
+.confirmacion {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #E6C2A3;
+    border-radius: 8px;
+    background: #FDFBF8;
+}
+
+.error-formulario {
+    color: #A43E32;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+@media (max-width: 650px) {
+    .encabezado-servicios {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .servicios-contenedor,
+    .formulario-contenedor {
+        margin: 15px;
+        padding: 18px;
+    }
+}
+
+.volver-panel {
+    display: block;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+.btn-volver {
+    display: inline-block;
+    background: #C98250;
+    color: #FFFFFF;
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.btn-volver:hover {
+    background: #B56F40;
+}

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consumos de {{ area }} | Hotel Taroa</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { min-height: 100vh; background: #fdfbf8; color: #44382f; }
+        .contenedor { max-width: 1150px; margin: 35px auto; padding: 0 18px; }
+        .tarjeta { padding: 25px; border: 1px solid #e6c2a3; border-radius: 14px; background: #fff; box-shadow: 0 8px 25px rgba(100, 65, 40, .07); }
+        h1, h2 { color: #9b6039; }
+        .btn-hotel { background: #c98250; color: white; border: 0; }
+        .btn-hotel:hover { background: #a96336; color: white; }
+        .form-label { font-weight: 600; }
+    </style>
+</head>
+<body>
+    <main class="contenedor">
+        <header class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+            <div>
+                <p class="mb-1 text-uppercase small">Hotel Taroa · Área de {{ area }}</p>
+                <h1 class="h2 mb-0">Registrar consumo</h1>
+                <p class="text-secondary mb-0">Los cargos se suman automáticamente a la factura del huésped.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary" href="{% url 'servicios' %}">Servicios del área</a>
+                <a class="btn btn-outline-secondary" href="{% url 'servicio_crear' %}">+ Añadir servicio</a>
+                <form method="post" action="{% url 'cerrar_sesion' %}">
+                    {% csrf_token %}
+                    <button class="btn btn-hotel" type="submit">Cerrar sesión</button>
+                </form>
+            </div>
+        </header>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <section class="tarjeta mb-4">
+            <h2 class="h4">Cargar a una habitación</h2>
+            <p class="text-secondary">Selecciona al huésped alojado y el producto o servicio consumido.</p>
+            <form method="post" class="row g-3">
+                {% csrf_token %}
+                {% if form.non_field_errors %}<div class="col-12 alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                {% for field in form %}
+                    <div class="col-md-{% if field.name == 'cantidad' %}2{% else %}5{% endif %}">
+                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
+                    </div>
+                {% endfor %}
+                <div class="col-12"><button class="btn btn-hotel" type="submit">Agregar consumo a la reserva</button></div>
+            </form>
+        </section>
+
+        <section class="tarjeta">
+            <h2 class="h4">Consumos recientes del área</h2>
+            <div class="table-responsive">
+                <table class="table table-striped align-middle mb-0">
+                    <thead><tr><th>Fecha</th><th>Habitación</th><th>Huésped</th><th>Detalle</th><th>Cantidad</th><th>Subtotal</th></tr></thead>
+                    <tbody>
+                    {% for consumo in consumos_recientes %}
+                        <tr>
+                            <td>{{ consumo.fecha|date:"d/m/Y H:i" }}</td>
+                            <td>{{ consumo.reserva.habitacion.numero }}</td>
+                            <td>{{ consumo.reserva.huesped }}</td>
+                            <td>{{ consumo.servicio.nombre }}</td>
+                            <td>{{ consumo.cantidad }}</td>
+                            <td>${{ consumo.subtotal|floatformat:2 }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="6" class="text-center text-secondary">Aún no se han registrado consumos.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
