@@ -319,6 +319,15 @@ class ServicioReservaForm(forms.ModelForm):
 
 
 class ConsumoForm(forms.ModelForm):
+    metodo_pago = forms.ChoiceField(
+        label="Método de pago",
+        choices=[
+            ("Efectivo", "Efectivo"),
+            ("Transferencia", "Transferencia"),
+            ("Tarjeta", "Tarjeta"),
+        ],
+    )
+
     class Meta:
         model = Consumo
         fields = ["reserva", "servicio", "cantidad"]
@@ -349,6 +358,7 @@ class ConsumoForm(forms.ModelForm):
         ).order_by("nombre")
         self.fields["servicio"].widget.attrs["class"] = "form-select"
         self.fields["cantidad"].widget.attrs["class"] = "form-control"
+        self.fields["metodo_pago"].widget.attrs["class"] = "form-select"
 
     def clean_cantidad(self):
         cantidad = self.cleaned_data["cantidad"]

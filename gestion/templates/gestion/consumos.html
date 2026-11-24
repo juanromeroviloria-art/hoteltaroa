@@ -22,7 +22,7 @@
             <div>
                 <p class="mb-1 text-uppercase small">Hotel Taroa · Área de {{ area }}</p>
                 <h1 class="h2 mb-0">Registrar consumo</h1>
-                <p class="text-secondary mb-0">Los cargos se suman automáticamente a la factura del huésped.</p>
+                <p class="text-secondary mb-0">Al registrar un consumo, cobra el valor exacto y el pago aparecerá en la cuenta para que recepción lo verifique.</p>
             </div>
             <div class="d-flex gap-2">
                 <a class="btn btn-outline-secondary" href="{% url 'servicios' %}">Servicios del área</a>
@@ -47,13 +47,13 @@
                 {% csrf_token %}
                 {% if form.non_field_errors %}<div class="col-12 alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
                 {% for field in form %}
-                    <div class="col-md-{% if field.name == 'cantidad' %}2{% else %}5{% endif %}">
+                    <div class="col-md-{% if field.name == 'cantidad' %}2{% elif field.name == 'metodo_pago' %}3{% else %}5{% endif %}">
                         <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
                         {{ field }}
                         {% if field.errors %}<div class="text-danger small">{{ field.errors }}</div>{% endif %}
                     </div>
                 {% endfor %}
-                <div class="col-12"><button class="btn btn-hotel" type="submit">Agregar consumo a la reserva</button></div>
+                <div class="col-12"><button class="btn btn-hotel" type="submit">Registrar consumo y pago</button></div>
             </form>
         </section>
 
@@ -61,7 +61,7 @@
             <h2 class="h4">Consumos recientes del área</h2>
             <div class="table-responsive">
                 <table class="table table-striped align-middle mb-0">
-                    <thead><tr><th>Fecha</th><th>Habitación</th><th>Huésped</th><th>Detalle</th><th>Cantidad</th><th>Subtotal</th></tr></thead>
+                    <thead><tr><th>Fecha</th><th>Habitación</th><th>Huésped</th><th>Detalle</th><th>Cantidad</th><th>Subtotal pagado</th><th>Método</th><th>Registrado por</th></tr></thead>
                     <tbody>
                     {% for consumo in consumos_recientes %}
                         <tr>
@@ -71,9 +71,11 @@
                             <td>{{ consumo.servicio.nombre }}</td>
                             <td>{{ consumo.cantidad }}</td>
                             <td>${{ consumo.subtotal|floatformat:2 }}</td>
+                            <td>{{ consumo.pago.metodo|default:"—" }}</td>
+                            <td>{{ consumo.pago.registrado_por.username|default:"—" }}</td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="6" class="text-center text-secondary">Aún no se han registrado consumos.</td></tr>
+                        <tr><td colspan="8" class="text-center text-secondary">Aún no se han registrado consumos.</td></tr>
                     {% endfor %}
                     </tbody>
                 </table>

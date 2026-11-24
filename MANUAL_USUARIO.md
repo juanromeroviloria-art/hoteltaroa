@@ -55,8 +55,11 @@ desde **Servicios**, seleccionando si pertenecen al restaurante, al bar o a la
 lavandería y configurando su precio. Al iniciar sesión, cada empleado solo puede
 consultar y añadir servicios de su propia área; no puede crear servicios para
 otra área ni editar o eliminar los existentes. También puede seleccionar
-consumos de su área y cargarlos a una habitación con huésped alojado. El sistema
-guarda el precio aplicado y quién registró cada consumo.
+consumos de su área y cargarlos a una habitación con huésped alojado. Al
+registrarlos, selecciona el método y el sistema cobra el valor exacto del
+consumo, vinculando el pago y quién lo recibió a la reserva. Recepción puede
+ver esos pagos en la factura y en el listado de pagos, junto con el usuario que
+los registró, y confirmar el saldo restante al hacer el check-out.
 
 Para cargar un catálogo inicial de platos, bebidas y servicios de lavandería,
 ejecuta `python manage.py cargar_catalogo_servicios_demo`. Los precios incluidos

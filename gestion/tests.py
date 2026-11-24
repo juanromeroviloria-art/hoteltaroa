@@ -346,14 +346,21 @@ class HotelWorkflowTests(TestCase):
                     "reserva": reserva.pk,
                     "servicio": producto.pk,
                     "cantidad": 2 if area == "Bar" else 1,
+                    "metodo_pago": "Efectivo",
                 })
                 self.assertRedirects(response, "/consumos/")
-                self.assertTrue(
-                    Consumo.objects.filter(
-                        reserva=reserva,
-                        servicio=producto,
-                        registrado_por=employee,
-                    ).exists()
+                consumo = Consumo.objects.get(
+                    reserva=reserva,
+                    servicio=producto,
+                    registrado_por=employee,
+                )
+                pago_consumo = Pago.objects.get(consumo=consumo)
+                self.assertEqual(pago_consumo.valor, consumo.subtotal)
+                self.assertEqual(pago_consumo.metodo, "Efectivo")
+                self.assertEqual(pago_consumo.registrado_por, employee)
+                self.assertContains(
+                    self.client.get("/consumos/"),
+                    "Registrar consumo y pago",
                 )
 
                 if area == "Bar":
@@ -363,16 +370,22 @@ class HotelWorkflowTests(TestCase):
                         "reserva": reserva.pk,
                         "servicio": productos["Restaurante"].pk,
                         "cantidad": 1,
+                        "metodo_pago": "Efectivo",
                     })
                     self.assertEqual(response.status_code, 200)
                     self.assertEqual(
                         Consumo.objects.filter(reserva=reserva).count(),
                         1,
                     )
+                    self.assertEqual(
+                        Pago.objects.filter(reserva=reserva).count(),
+                        1,
+                    )
 
         reserva.refresh_from_db()
         self.assertEqual(reserva.valor_total, Decimal("247000.00"))
-        self.assertEqual(reserva.saldo_pendiente, Decimal("247000.00"))
+        self.assertEqual(reserva.valor_pagado, Decimal("47000.00"))
+        self.assertEqual(reserva.saldo_pendiente, Decimal("200000.00"))
 
         receptionist_role, _ = Rol.objects.get_or_create(
             nombre="Recepcionista"
@@ -395,7 +408,23 @@ class HotelWorkflowTests(TestCase):
         self.assertContains(response, "Factura de estadía")
         for producto in productos.values():
             self.assertContains(response, producto.nombre)
+        self.assertContains(response, "Consumo #")
+        for empleado in (
+            User.objects.get(username="empleado-bar"),
+            User.objects.get(username="empleado-restaurante"),
+            User.objects.get(username="empleado-lavanderia"),
+        ):
+            self.assertContains(response, empleado.username)
         self.assertContains(response, "247000,00")
+        self.assertContains(response, "47000,00")
+
+        pagos = self.client.get("/pagos/")
+        for empleado in (
+            User.objects.get(username="empleado-bar"),
+            User.objects.get(username="empleado-restaurante"),
+            User.objects.get(username="empleado-lavanderia"),
+        ):
+            self.assertContains(pagos, empleado.username)
 
         response = self.client.get(
             f"/pagos/crear/?reserva={reserva.pk}"
@@ -403,7 +432,7 @@ class HotelWorkflowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         response = self.client.post("/pagos/crear/", {
             "reserva": reserva.pk,
-            "valor": "247000.00",
+            "valor": "200000.00",
             "metodo": "Tarjeta",
             "referencia": "CHECKOUT-1",
         })
@@ -411,6 +440,11 @@ class HotelWorkflowTests(TestCase):
             response,
             f"/reservas/{reserva.pk}/factura/",
         )
+        pago_checkout = Pago.objects.get(
+            reserva=reserva,
+            referencia="CHECKOUT-1",
+        )
+        self.assertEqual(pago_checkout.registrado_por, receptionist)
         response = self.client.get(f"/reservas/{reserva.pk}/factura/")
         self.assertContains(response, "Cuenta pagada")
         reserva.refresh_from_db()
@@ -937,7 +971,7 @@ class HotelWorkflowTests(TestCase):
         response = self.client.get("/")
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "/static/img/hotel-taroa-costa.jpg")
+        self.assertContains(response, "/static/img/hotel-taroa-costa.")
         self.assertNotContains(response, self.alojamiento.foto_url)
 
     def test_homepage_lists_available_rooms_for_anonymous_visitors(self):
@@ -1013,7 +1047,7 @@ class HotelWorkflowTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'class="fondo-login"')
-        self.assertContains(response, "/static/img/fondo-login.jpg")
+        self.assertContains(response, "/static/img/fondo-login.")
         self.assertNotContains(response, self.alojamiento.foto_url)
         self.assertContains(response, "Iniciar sesión")
 
@@ -1181,7 +1215,7 @@ class HotelWorkflowTests(TestCase):
             response,
             f'min="{date.today().isoformat()}"',
         )
-        self.assertContains(response, "/static/img/habitacion-moderna.jpg")
+        self.assertContains(response, "/static/img/habitacion-moderna.")
         self.assertNotContains(response, self.habitacion.foto_url)
         self.assertContains(response, 'alt="Habitación 101 - Doble"')
 

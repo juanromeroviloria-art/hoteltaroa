@@ -35,7 +35,7 @@ from .forms import (
     TipoHabitacionForm,
 )
 from django.db.models.deletion import ProtectedError
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Prefetch, Q, Sum
 from datetime import date
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import validate_email
@@ -1156,7 +1156,13 @@ def reserva_factura(request, reserva_id):
             "servicios__servicio",
             "consumos__servicio",
             "consumos__registrado_por",
-            "pagos",
+            Prefetch(
+                "pagos",
+                queryset=Pago.objects.select_related(
+                    "consumo__servicio",
+                    "registrado_por",
+                ),
+            ),
         ),
         pk=reserva_id,
     )
@@ -1250,8 +1256,13 @@ def consumos(request):
                     "reserva",
                     "Solo se pueden registrar consumos de huéspedes alojados.",
                 )
+            elif servicio.precio <= 0:
+                form.add_error(
+                    "servicio",
+                    "El servicio debe tener un precio mayor que cero para cobrarlo.",
+                )
             else:
-                Consumo.objects.create(
+                consumo = Consumo.objects.create(
                     reserva=reserva,
                     servicio=servicio,
                     area=area,
@@ -1259,10 +1270,19 @@ def consumos(request):
                     precio_unitario=servicio.precio,
                     registrado_por=request.user,
                 )
+                Pago.objects.create(
+                    reserva=reserva,
+                    consumo=consumo,
+                    valor=consumo.subtotal,
+                    metodo=form.cleaned_data["metodo_pago"],
+                    referencia=f"Consumo #{consumo.pk}",
+                    registrado_por=request.user,
+                )
                 messages.success(
                     request,
-                    f"Consumo de {servicio.nombre} agregado a la reserva "
-                    f"de la habitación {reserva.habitacion.numero}.",
+                    f"Consumo de {servicio.nombre} y pago de "
+                    f"${consumo.subtotal:,.2f} registrados para la habitación "
+                    f"{reserva.habitacion.numero}.",
                 )
                 return redirect("consumos")
 
@@ -1273,6 +1293,7 @@ def consumos(request):
         "reserva__huesped",
         "reserva__habitacion",
         "servicio",
+        "pago",
     ).order_by("-fecha")[:30]
     return render(request, "gestion/consumos.html", {
         "form": form,
@@ -1324,6 +1345,8 @@ def pagos(request):
         "reserva",
         "reserva__huesped",
         "reserva__habitacion",
+        "consumo__servicio",
+        "registrado_por",
     ).prefetch_related(
         "reserva__pagos",
         "reserva__servicios",
@@ -1354,7 +1377,9 @@ def pago_crear(request):
                 ).first()
             form = PagoForm(request.POST)
             if form.is_valid():
-                pago = form.save()
+                pago = form.save(commit=False)
+                pago.registrado_por = request.user
+                pago.save()
                 messages.success(request, "Pago registrado correctamente.")
                 if pago.reserva.estado == "FINALIZADA":
                     return redirect(

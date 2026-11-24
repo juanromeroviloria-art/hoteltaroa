@@ -128,8 +128,10 @@
                     <thead>
                         <tr>
                             <th>Fecha</th>
+                            <th>Concepto</th>
                             <th>Método</th>
                             <th>Referencia</th>
+                            <th>Recibido por</th>
                             <th class="text-end">Valor</th>
                         </tr>
                     </thead>
@@ -137,13 +139,15 @@
                         {% for pago in reserva.pagos.all %}
                             <tr>
                                 <td>{{ pago.fecha|date:"d/m/Y H:i" }}</td>
+                                <td>{{ pago.consumo.servicio.nombre|default:"Abono a reserva" }}</td>
                                 <td>{{ pago.metodo }}</td>
                                 <td>{{ pago.referencia|default:"—" }}</td>
+                                <td>{{ pago.registrado_por.username|default:"—" }}</td>
                                 <td class="text-end">${{ pago.valor|floatformat:2 }}</td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="4" class="text-secondary">
+                                <td colspan="6" class="text-secondary">
                                     No hay pagos registrados.
                                 </td>
                             </tr>

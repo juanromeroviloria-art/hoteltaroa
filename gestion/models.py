@@ -242,6 +242,20 @@ class Pago(models.Model):
     metodo = models.CharField(max_length=30)
     fecha = models.DateTimeField(auto_now_add=True)
     referencia = models.CharField(max_length=100, blank=True)
+    consumo = models.OneToOneField(
+        "Consumo",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pago",
+    )
+    registrado_por = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pagos_registrados",
+    )
 
     def __str__(self):
         return f"Pago {self.id} - ${self.valor}"
