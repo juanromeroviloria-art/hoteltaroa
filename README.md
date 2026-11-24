@@ -49,25 +49,6 @@ No uses la clave de desarrollo ni `DEBUG=true` en un despliegue público.
 La configuración de producción redirige a HTTPS y usa cookies seguras y HSTS;
 actívala únicamente cuando el dominio ya esté servido correctamente por HTTPS.
 
-## Correo para verificar reservas
-
-En desarrollo, el código de verificación se imprime en la consola del servidor
-Django. Para enviarlo por correo real, configura las siguientes variables de
-entorno con las credenciales de un proveedor SMTP (no las guardes en el código):
-
-```powershell
-$env:EMAIL_HOST = "smtp.example.com"
-$env:EMAIL_PORT = "587"
-$env:EMAIL_HOST_USER = "cuenta@example.com"
-$env:EMAIL_HOST_PASSWORD = "contraseña-del-proveedor"
-$env:EMAIL_USE_TLS = "true"
-$env:EMAIL_USE_SSL = "false"
-$env:DEFAULT_FROM_EMAIL = "Hotel Taroa <cuenta@example.com>"
-```
-
-La verificación del correo no procesa ni confirma pagos: la solicitud queda
-pendiente de pago real y revisión de recepción.
-
 ## Funcionalidades
 
 - Roles de Administrador, Recepcionista, Gerente y Cliente.
@@ -77,7 +58,6 @@ pendiente de pago real y revisión de recepción.
 - Confirmación, check-in y check-out con sincronización del estado de habitación.
 - Servicios asociados a reservas, valor total, pagos parciales y saldo.
 - Solicitudes de cancelación para clientes y decisión desde recepción.
-- Verificación por correo antes de enviar una solicitud de reserva.
 - Indicadores, filtros y reportes de reservas, ocupación, ingresos, huéspedes y
   servicios vendidos.
 - Configuración regional del alojamiento, fotografía por URL y sitios turísticos

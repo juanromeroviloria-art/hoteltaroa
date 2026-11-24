@@ -121,21 +121,6 @@ path("login/", views.login_usuario, name="login"),
         name="reserva_cliente"
     ),
     path(
-        "cliente/reservar/verificar-correo/",
-        views.reserva_verificar_correo,
-        name="reserva_verificar_correo",
-    ),
-    path(
-        "cliente/reservar/reenviar-codigo/",
-        views.reserva_reenviar_codigo,
-        name="reserva_reenviar_codigo",
-    ),
-    path(
-        "cliente/reservar/cancelar-verificacion/",
-        views.reserva_cancelar_verificacion,
-        name="reserva_cancelar_verificacion",
-    ),
-    path(
         "cliente/mis-reservas/",
         views.mis_reservas,
         name="mis_reservas"

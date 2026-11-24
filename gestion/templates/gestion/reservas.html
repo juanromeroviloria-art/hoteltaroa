@@ -84,12 +84,7 @@
                         <td>{{ reserva.habitacion.numero }}</td>
                         <td>{{ reserva.fecha_entrada|date:"d/m/Y" }} – {{ reserva.fecha_salida|date:"d/m/Y" }}<br><small>{{ reserva.noches }} noche(s)</small></td>
                         <td>{{ reserva.cantidad_huespedes }}</td>
-                        <td>
-                            <span class="estado">{{ reserva.get_estado_display }}</span>
-                            {% if reserva.estado == "PENDIENTE" and reserva.saldo_pendiente > 0 %}
-                                <br><small class="text-warning-emphasis">Pago pendiente</small>
-                            {% endif %}
-                        </td>
+                        <td><span class="estado">{{ reserva.get_estado_display }}</span></td>
                         <td>${{ reserva.valor_total|floatformat:2 }}<br><small>Saldo: ${{ reserva.saldo_pendiente|floatformat:2 }}</small></td>
                         <td class="acciones">
                             <a class="btn btn-sm btn-outline-dark" href="{% url 'reserva_factura' reserva.id %}">Ver factura</a>

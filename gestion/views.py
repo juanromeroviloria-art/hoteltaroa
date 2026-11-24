@@ -1,16 +1,9 @@
 
-import logging
-import secrets
-from datetime import date, timedelta
-from smtplib import SMTPException
-
 from django.contrib import messages
-from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.shortcuts import render, redirect, get_object_or_404
-from django.core.mail import send_mail
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 from django.db import transaction
@@ -43,12 +36,11 @@ from .forms import (
 )
 from django.db.models.deletion import ProtectedError
 from django.db.models import Count, Prefetch, Q, Sum
+from datetime import date
 from django.contrib.auth.password_validation import validate_password
 from django.core.validators import validate_email
 from django.db import models
 from django.templatetags.static import static
-from django.utils import timezone
-from django.utils.crypto import constant_time_compare, salted_hmac
 from .operations import (
     cancelar_reserva,
     confirmar_reserva,
@@ -59,19 +51,12 @@ from .operations import (
 from .permissions import requiere_roles, usuario_tiene_rol
 
 
-logger = logging.getLogger(__name__)
-
 AREAS_CONSUMO_POR_ROL = {
     "Restaurante": "RESTAURANTE",
     "Bar": "BAR",
     "Lavandería": "LAVANDERIA",
 }
 COMIDAS_DISPONIBLES_EN_RESERVA = ("desayuno", "almuerzo", "cena")
-RESERVA_VERIFICACION_SESSION_KEY = "reserva_email_verification"
-RESERVA_CODIGO_DURACION = timedelta(minutes=10)
-RESERVA_CODIGO_INTENTOS_MAXIMOS = 5
-RESERVA_CODIGO_REENVIO_SEGUNDOS = 60
-RESERVA_CODIGO_REENVIOS_MAXIMOS = 3
 
 
 def servicios_comida_reserva():
@@ -1767,177 +1752,6 @@ def habitaciones_cliente(request):
 
 
 
-def _normalizar_solicitud_reserva(datos):
-    habitacion_id = str(datos.get("habitacion", "")).strip()
-    if not habitacion_id.isdigit():
-        raise ValueError("Selecciona una habitación válida.")
-
-    try:
-        fecha_entrada = date.fromisoformat(
-            str(datos.get("fecha_entrada", "")).strip()
-        )
-        fecha_salida = date.fromisoformat(
-            str(datos.get("fecha_salida", "")).strip()
-        )
-        cantidad_adultos = int(datos.get("cantidad_huespedes", "1"))
-        cantidad_ninos = int(datos.get("cantidad_ninos", "0"))
-    except (TypeError, ValueError):
-        raise ValueError(
-            "Las fechas y la cantidad de huéspedes deben ser válidas."
-        )
-
-    servicios_solicitados = datos.get("servicios", [])
-    if not isinstance(servicios_solicitados, (list, tuple)):
-        raise ValueError("La selección de alimentos no es válida.")
-    if any(not str(servicio).isdigit() for servicio in servicios_solicitados):
-        raise ValueError("La selección de alimentos no es válida.")
-    servicios_ids = list(dict.fromkeys(
-        int(servicio) for servicio in servicios_solicitados
-    ))
-    if len(servicios_ids) > len(COMIDAS_DISPONIBLES_EN_RESERVA):
-        raise ValueError("La selección de alimentos no es válida.")
-
-    return {
-        "habitacion": int(habitacion_id),
-        "fecha_entrada": fecha_entrada.isoformat(),
-        "fecha_salida": fecha_salida.isoformat(),
-        "cantidad_huespedes": cantidad_adultos,
-        "cantidad_ninos": cantidad_ninos,
-        "servicios": servicios_ids,
-    }
-
-
-def _validar_disponibilidad_reserva(huesped, datos, bloquear=False):
-    fecha_entrada = date.fromisoformat(datos["fecha_entrada"])
-    fecha_salida = date.fromisoformat(datos["fecha_salida"])
-    cantidad_adultos = datos["cantidad_huespedes"]
-    cantidad_ninos = datos["cantidad_ninos"]
-
-    if fecha_entrada < timezone.localdate():
-        raise ValueError("La fecha de entrada no puede estar en el pasado.")
-    if fecha_salida <= fecha_entrada:
-        raise ValueError("La salida debe ser posterior a la entrada.")
-    if cantidad_adultos < 1:
-        raise ValueError("Debe registrarse al menos un adulto.")
-    if cantidad_ninos < 0:
-        raise ValueError("La cantidad de niños no es válida.")
-
-    if Reserva.objects.filter(
-        huesped=huesped,
-        fecha_entrada__lt=fecha_salida,
-        fecha_salida__gt=fecha_entrada,
-        estado__in=["PENDIENTE", "CONFIRMADA", "EN_CURSO"],
-    ).exists():
-        raise ValueError(
-            "Ya tienes una reserva que coincide con esas fechas. "
-            "Elige otras fechas para evitar reservar dos estadías "
-            "al mismo tiempo."
-        )
-
-    habitaciones = Habitacion.objects.select_related("tipo", "alojamiento")
-    if bloquear:
-        habitaciones = habitaciones.select_for_update()
-    habitacion = habitaciones.filter(
-        pk=datos["habitacion"],
-    ).exclude(estado="MANTENIMIENTO").first()
-    if habitacion is None:
-        raise ValueError("La habitación seleccionada ya no está disponible.")
-
-    if cantidad_adultos + cantidad_ninos > habitacion.tipo.capacidad:
-        raise ValueError(
-            "La habitación no tiene capacidad suficiente "
-            "para la cantidad de adultos y niños."
-        )
-
-    if Reserva.objects.filter(
-        habitacion=habitacion,
-        fecha_entrada__lt=fecha_salida,
-        fecha_salida__gt=fecha_entrada,
-        estado__in=["PENDIENTE", "CONFIRMADA", "EN_CURSO"],
-    ).exists():
-        raise ValueError(
-            "La habitación no está disponible para esas fechas."
-        )
-
-    servicios_queryset = servicios_comida_reserva()
-    if bloquear:
-        servicios_queryset = servicios_queryset.select_for_update()
-    servicios = list(
-        servicios_queryset.filter(pk__in=datos["servicios"])
-    )
-    if len(servicios) != len(datos["servicios"]):
-        raise ValueError(
-            "Una o más opciones de alimentación ya no están disponibles."
-        )
-
-    return habitacion, servicios, fecha_entrada, fecha_salida
-
-
-def _crear_reserva_verificada(request, huesped, datos):
-    with transaction.atomic():
-        Huesped.objects.select_for_update().get(pk=huesped.pk)
-        habitacion, servicios, fecha_entrada, fecha_salida = (
-            _validar_disponibilidad_reserva(huesped, datos, bloquear=True)
-        )
-        reserva = Reserva.objects.create(
-            usuario=request.user,
-            huesped=huesped,
-            habitacion=habitacion,
-            fecha_entrada=fecha_entrada,
-            fecha_salida=fecha_salida,
-            cantidad_huespedes=datos["cantidad_huespedes"],
-            cantidad_ninos=datos["cantidad_ninos"],
-            estado="PENDIENTE",
-        )
-        ServicioReserva.objects.bulk_create([
-            ServicioReserva(
-                reserva=reserva,
-                servicio=servicio,
-                cantidad=1,
-                precio_unitario=servicio.precio,
-            )
-            for servicio in servicios
-        ])
-        sincronizar_estado_habitacion(habitacion.pk)
-    return reserva
-
-
-def _hash_codigo_reserva(codigo):
-    return salted_hmac(
-        "gestion.reserva.email_verification",
-        codigo,
-    ).hexdigest()
-
-
-def _enviar_codigo_reserva(correo, codigo):
-    return send_mail(
-        "Código para verificar tu correo · Hotel Taroa",
-        (
-            f"Tu código de verificación es: {codigo}\n\n"
-            "El código vence en 10 minutos. Ingresarlo verifica tu correo "
-            "para enviar una solicitud de reserva; no es un pago ni confirma "
-            "que se haya recibido dinero. La reserva quedará pendiente de "
-            "pago real y revisión de recepción."
-        ),
-        settings.DEFAULT_FROM_EMAIL,
-        [correo],
-        fail_silently=False,
-    )
-
-
-def _obtener_verificacion_reserva(request):
-    verificacion = request.session.get(RESERVA_VERIFICACION_SESSION_KEY)
-    if not verificacion:
-        return None
-    if verificacion.get("usuario_id") != request.user.pk:
-        request.session.pop(RESERVA_VERIFICACION_SESSION_KEY, None)
-        return None
-    if verificacion.get("expira", 0) <= int(timezone.now().timestamp()):
-        request.session.pop(RESERVA_VERIFICACION_SESSION_KEY, None)
-        return None
-    return verificacion
-
-
 @login_required(login_url="login_cliente")
 def reserva_cliente(request):
     try:
@@ -1950,123 +1764,162 @@ def reserva_cliente(request):
         )
         return redirect("login_cliente")
 
-    verificacion = _obtener_verificacion_reserva(request)
     servicios_seleccionados = []
-    datos_formulario = {}
 
     if request.method == "POST":
-        if verificacion:
-            messages.info(
-                request,
-                "Ya enviamos un código a tu correo. Ingresa ese código "
-                "para continuar o cancela la verificación.",
-            )
-            return redirect("reserva_cliente")
-
-        try:
-            datos = _normalizar_solicitud_reserva({
-                "habitacion": request.POST.get("habitacion", ""),
-                "fecha_entrada": request.POST.get("fecha_entrada", ""),
-                "fecha_salida": request.POST.get("fecha_salida", ""),
-                "cantidad_huespedes": request.POST.get(
-                    "cantidad_huespedes", "1"
-                ),
-                "cantidad_ninos": request.POST.get("cantidad_ninos", "0"),
-                "servicios": request.POST.getlist("servicios"),
-            })
-            _validar_disponibilidad_reserva(huesped, datos)
-            correo = (huesped.correo or request.user.email).strip()
-            if not correo:
-                raise ValueError(
-                    "Tu cuenta no tiene un correo registrado. Actualízalo "
-                    "en tu perfil antes de solicitar una reserva."
-                )
-            validate_email(correo)
-        except ValidationError as error:
-            messages.error(request, "; ".join(error.messages))
-        except ValueError as error:
-            messages.error(request, str(error))
-        else:
-            codigo = f"{secrets.randbelow(1_000_000):06d}"
-            try:
-                enviados = _enviar_codigo_reserva(correo, codigo)
-            except (OSError, SMTPException):
-                logger.exception(
-                    "No se pudo enviar el código de verificación de reserva "
-                    "al usuario %s.",
-                    request.user.pk,
-                )
-                messages.error(
-                    request,
-                    "No pudimos enviar el código a tu correo. "
-                    "Inténtalo de nuevo más tarde.",
-                )
-            else:
-                if enviados != 1:
-                    messages.error(
-                        request,
-                        "No pudimos enviar el código a tu correo. "
-                        "Inténtalo de nuevo más tarde.",
-                    )
-                else:
-                    ahora = int(timezone.now().timestamp())
-                    request.session[RESERVA_VERIFICACION_SESSION_KEY] = {
-                        "usuario_id": request.user.pk,
-                        "correo": correo,
-                        "datos": datos,
-                        "codigo_hash": _hash_codigo_reserva(codigo),
-                        "expira": ahora + int(
-                            RESERVA_CODIGO_DURACION.total_seconds()
-                        ),
-                        "ultimo_envio": ahora,
-                        "intentos": 0,
-                        "reenvios": 0,
-                    }
-                    messages.success(
-                        request,
-                        "Enviamos un código de verificación a tu correo. "
-                        "Este código no es un pago.",
-                    )
-                    return redirect("reserva_cliente")
-
-        datos_formulario = request.POST
+        habitacion_id = request.POST.get("habitacion")
+        entrada = request.POST.get("fecha_entrada", "")
+        salida = request.POST.get("fecha_salida", "")
+        cantidad = request.POST.get("cantidad_huespedes", "1")
+        cantidad_ninos = request.POST.get("cantidad_ninos", "0")
         servicios_seleccionados = request.POST.getlist("servicios")
 
-    verificacion = _obtener_verificacion_reserva(request)
-    if verificacion:
-        datos_formulario = verificacion["datos"]
-        servicios_seleccionados = [
-            str(servicio) for servicio in datos_formulario["servicios"]
-        ]
+        try:
+            if any(not s.isdigit() for s in servicios_seleccionados):
+                raise ValueError("La selección de servicios no es válida.")
+
+            servicios_ids = list(dict.fromkeys(servicios_seleccionados))
+
+            fecha_entrada = date.fromisoformat(entrada)
+            fecha_salida = date.fromisoformat(salida)
+
+            cantidad_adultos = int(cantidad)
+            cantidad_ninos = int(cantidad_ninos)
+            total_personas = cantidad_adultos + cantidad_ninos
+
+            if fecha_entrada < date.today():
+                raise ValueError(
+                    "La fecha de entrada no puede estar en el pasado."
+                )
+
+            if fecha_salida <= fecha_entrada:
+                raise ValueError(
+                    "La salida debe ser posterior a la entrada."
+                )
+
+            if cantidad_adultos < 1:
+                raise ValueError("Debe registrarse al menos un adulto.")
+
+            if cantidad_ninos < 0:
+                raise ValueError("La cantidad de niños no es válida.")
+
+            with transaction.atomic():
+                Huesped.objects.select_for_update().get(pk=huesped.pk)
+                reserva_cliente_existente = Reserva.objects.filter(
+                    huesped=huesped,
+                    fecha_entrada__lt=fecha_salida,
+                    fecha_salida__gt=fecha_entrada,
+                    estado__in=["PENDIENTE", "CONFIRMADA", "EN_CURSO"],
+                ).exists()
+                if reserva_cliente_existente:
+                    raise ValueError(
+                        "Ya tienes una reserva que coincide con esas fechas. "
+                        "Elige otras fechas para evitar reservar dos estadías "
+                        "al mismo tiempo."
+                    )
+
+                habitacion = get_object_or_404(
+                    Habitacion.objects.select_for_update().select_related(
+                        "tipo", "alojamiento"
+                    ).exclude(estado="MANTENIMIENTO"),
+                    pk=habitacion_id,
+                )
+
+                if total_personas > habitacion.tipo.capacidad:
+                    raise ValueError(
+                        "La habitación no tiene capacidad suficiente "
+                        "para la cantidad de adultos y niños."
+                    )
+
+                conflicto = Reserva.objects.filter(
+                    habitacion=habitacion,
+                    fecha_entrada__lt=fecha_salida,
+                    fecha_salida__gt=fecha_entrada,
+                    estado__in=["PENDIENTE", "CONFIRMADA", "EN_CURSO"],
+                ).exists()
+
+                if conflicto:
+                    raise ValueError(
+                        "La habitación no está disponible para esas fechas."
+                    )
+
+                reserva = Reserva.objects.create(
+                    usuario=request.user,
+                    huesped=huesped,
+                    habitacion=habitacion,
+                    fecha_entrada=fecha_entrada,
+                    fecha_salida=fecha_salida,
+                    cantidad_huespedes=cantidad_adultos,
+                    cantidad_ninos=cantidad_ninos,
+                    estado="PENDIENTE",
+                )
+
+                servicios = list(
+                    servicios_comida_reserva()
+                    .select_for_update()
+                    .filter(pk__in=servicios_ids)
+                )
+
+                if len(servicios) != len(servicios_ids):
+                    raise ValueError(
+                        "Uno o más servicios ya no están disponibles. "
+                        "Actualiza la página e inténtalo de nuevo."
+                    )
+
+                ServicioReserva.objects.bulk_create([
+                    ServicioReserva(
+                        reserva=reserva,
+                        servicio=servicio,
+                        cantidad=1,
+                        precio_unitario=servicio.precio,
+                    )
+                    for servicio in servicios
+                ])
+
+                sincronizar_estado_habitacion(habitacion.pk)
+
+            messages.success(
+                request,
+                "Tu solicitud de reserva fue registrada."
+            )
+            return redirect("mis_reservas")
+
+        except (ValueError, TypeError) as error:
+            messages.error(request, str(error))
 
     habitaciones = Habitacion.objects.select_related(
         "tipo", "alojamiento"
     ).exclude(estado="MANTENIMIENTO")
     fecha_entrada_form = (
-        datos_formulario.get("fecha_entrada", "")
-        or request.GET.get("fecha_entrada", "")
+        request.POST.get("fecha_entrada", "")
+        if request.method == "POST"
+        else request.GET.get("fecha_entrada", "")
     )
     fecha_salida_form = (
-        datos_formulario.get("fecha_salida", "")
-        or request.GET.get("fecha_salida", "")
+        request.POST.get("fecha_salida", "")
+        if request.method == "POST"
+        else request.GET.get("fecha_salida", "")
     )
-    cantidad_adultos_form = datos_formulario.get(
-        "cantidad_huespedes",
-        request.GET.get("cantidad_huespedes", "1"),
+    cantidad_adultos_form = (
+        request.POST.get("cantidad_huespedes", "1")
+        if request.method == "POST"
+        else request.GET.get("cantidad_huespedes", "1")
     )
-    cantidad_ninos_form = datos_formulario.get(
-        "cantidad_ninos",
-        request.GET.get("cantidad_ninos", "0"),
+    cantidad_ninos_form = (
+        request.POST.get("cantidad_ninos", "0")
+        if request.method == "POST"
+        else request.GET.get("cantidad_ninos", "0")
     )
-    habitacion_seleccionada = str(datos_formulario.get(
-        "habitacion",
-        request.GET.get("habitacion", ""),
-    ))
+    habitacion_seleccionada = (
+        request.POST.get("habitacion", "")
+        if request.method == "POST"
+        else request.GET.get("habitacion", "")
+    )
     if fecha_entrada_form and fecha_salida_form:
         try:
             fecha_entrada_filtro = date.fromisoformat(fecha_entrada_form)
             fecha_salida_filtro = date.fromisoformat(fecha_salida_form)
-        except (TypeError, ValueError):
+        except ValueError:
             messages.error(request, "Las fechas no son válidas.")
         else:
             if fecha_salida_filtro <= fecha_entrada_filtro:
@@ -2084,147 +1937,19 @@ def reserva_cliente(request):
                     pk__in=habitaciones_ocupadas
                 )
 
+    servicios = servicios_comida_reserva().order_by("nombre")
+
     return render(request, "reserva_cliente.html", {
         "habitaciones": habitaciones,
-        "servicios": servicios_comida_reserva().order_by("nombre"),
-        "fecha_minima": timezone.localdate().isoformat(),
+        "servicios": servicios,
+        "fecha_minima": date.today().isoformat(),
         "fecha_entrada": fecha_entrada_form,
         "fecha_salida": fecha_salida_form,
         "cantidad_huespedes": cantidad_adultos_form,
         "cantidad_ninos": cantidad_ninos_form,
         "habitacion_seleccionada": habitacion_seleccionada,
         "servicios_seleccionados": servicios_seleccionados,
-        "verificacion_correo_pendiente": bool(verificacion),
-        "correo_verificacion": verificacion["correo"] if verificacion else "",
-        "reenviar_disponible": (
-            verificacion
-            and verificacion["reenvios"] < RESERVA_CODIGO_REENVIOS_MAXIMOS
-        ),
     })
-
-
-@login_required(login_url="login_cliente")
-@require_POST
-def reserva_verificar_correo(request):
-    verificacion = _obtener_verificacion_reserva(request)
-    if not verificacion:
-        messages.error(
-            request,
-            "El código venció o no hay una solicitud para verificar. "
-            "Vuelve a completar el formulario de reserva.",
-        )
-        return redirect("reserva_cliente")
-
-    codigo = request.POST.get("codigo", "").strip()
-    if not constant_time_compare(
-        _hash_codigo_reserva(codigo),
-        verificacion["codigo_hash"],
-    ):
-        verificacion["intentos"] += 1
-        if verificacion["intentos"] >= RESERVA_CODIGO_INTENTOS_MAXIMOS:
-            request.session.pop(RESERVA_VERIFICACION_SESSION_KEY, None)
-            messages.error(
-                request,
-                "Superaste el máximo de intentos. Inicia de nuevo "
-                "la solicitud para recibir otro código.",
-            )
-        else:
-            request.session[RESERVA_VERIFICACION_SESSION_KEY] = verificacion
-            messages.error(
-                request,
-                "El código no es correcto. Revisa el correo e inténtalo "
-                "nuevamente.",
-            )
-        return redirect("reserva_cliente")
-
-    try:
-        datos = _normalizar_solicitud_reserva(verificacion["datos"])
-        huesped = request.user.perfil_huesped
-        reserva = _crear_reserva_verificada(request, huesped, datos)
-    except (Huesped.DoesNotExist, TypeError, ValueError, ValidationError) as error:
-        request.session.pop(RESERVA_VERIFICACION_SESSION_KEY, None)
-        if isinstance(error, ValidationError):
-            mensaje = "; ".join(error.messages)
-        elif isinstance(error, Huesped.DoesNotExist):
-            mensaje = "No encontramos el perfil de huésped de esta cuenta."
-        else:
-            mensaje = str(error)
-        messages.error(request, mensaje)
-        return redirect("reserva_cliente")
-
-    request.session.pop(RESERVA_VERIFICACION_SESSION_KEY, None)
-    messages.success(
-        request,
-        f"Correo verificado. La solicitud #{reserva.pk} fue enviada a "
-        "recepción y está pendiente de pago real. No se registró ningún pago.",
-    )
-    return redirect("mis_reservas")
-
-
-@login_required(login_url="login_cliente")
-@require_POST
-def reserva_reenviar_codigo(request):
-    verificacion = _obtener_verificacion_reserva(request)
-    if not verificacion:
-        messages.error(
-            request,
-            "El código venció. Vuelve a completar el formulario de reserva.",
-        )
-        return redirect("reserva_cliente")
-
-    ahora = int(timezone.now().timestamp())
-    if ahora - verificacion["ultimo_envio"] < RESERVA_CODIGO_REENVIO_SEGUNDOS:
-        messages.error(
-            request,
-            "Espera un minuto antes de solicitar otro código.",
-        )
-        return redirect("reserva_cliente")
-    if verificacion["reenvios"] >= RESERVA_CODIGO_REENVIOS_MAXIMOS:
-        messages.error(
-            request,
-            "Alcanzaste el máximo de reenvíos. Cancela y vuelve a iniciar "
-            "la solicitud si necesitas otro código.",
-        )
-        return redirect("reserva_cliente")
-
-    codigo = f"{secrets.randbelow(1_000_000):06d}"
-    try:
-        enviados = _enviar_codigo_reserva(verificacion["correo"], codigo)
-    except (OSError, SMTPException):
-        logger.exception(
-            "No se pudo reenviar el código de verificación de reserva "
-            "al usuario %s.",
-            request.user.pk,
-        )
-        messages.error(
-            request,
-            "No pudimos reenviar el código. Inténtalo de nuevo más tarde.",
-        )
-        return redirect("reserva_cliente")
-    if enviados != 1:
-        messages.error(
-            request,
-            "No pudimos reenviar el código. Inténtalo de nuevo más tarde.",
-        )
-        return redirect("reserva_cliente")
-
-    verificacion.update({
-        "codigo_hash": _hash_codigo_reserva(codigo),
-        "expira": ahora + int(RESERVA_CODIGO_DURACION.total_seconds()),
-        "ultimo_envio": ahora,
-        "reenvios": verificacion["reenvios"] + 1,
-    })
-    request.session[RESERVA_VERIFICACION_SESSION_KEY] = verificacion
-    messages.success(request, "Enviamos un nuevo código a tu correo.")
-    return redirect("reserva_cliente")
-
-
-@login_required(login_url="login_cliente")
-@require_POST
-def reserva_cancelar_verificacion(request):
-    request.session.pop(RESERVA_VERIFICACION_SESSION_KEY, None)
-    messages.info(request, "Se canceló la verificación del correo.")
-    return redirect("reserva_cliente")
 
 
 
