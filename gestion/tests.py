@@ -1,3 +1,4 @@
+import re
 from datetime import date, timedelta
 from decimal import Decimal
 from io import BytesIO, StringIO
@@ -5,6 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from django.contrib.auth.models import User
+from django.core import mail
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -37,6 +39,7 @@ from .operations import (
 )
 
 
+@override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
 class HotelWorkflowTests(TestCase):
     def setUp(self):
         self.rol_admin, _ = Rol.objects.get_or_create(
@@ -88,6 +91,24 @@ class HotelWorkflowTests(TestCase):
         }
         defaults.update(datos)
         return Reserva.objects.create(**defaults)
+
+    def enviar_y_verificar_solicitud(self, datos):
+        response = self.client.post("/cliente/reservar/", datos)
+        self.assertRedirects(response, "/cliente/reservar/")
+        correo = next(
+            mensaje
+            for mensaje in reversed(mail.outbox)
+            if mensaje.to
+        )
+        coincidencia = re.search(
+            r"Tu código de verificación es: (\d{6})",
+            correo.body,
+        )
+        self.assertIsNotNone(coincidencia)
+        return self.client.post(
+            "/cliente/reservar/verificar-correo/",
+            {"codigo": coincidencia.group(1)},
+        )
 
     def test_reservation_form_blocks_overlapping_active_booking(self):
         self.crear_reserva(estado="CONFIRMADA")
@@ -172,7 +193,7 @@ class HotelWorkflowTests(TestCase):
         )
         self.client.force_login(cliente)
 
-        response = self.client.post("/cliente/reservar/", {
+        response = self.enviar_y_verificar_solicitud({
             "habitacion": self.habitacion.pk,
             "fecha_entrada": self.entrada.isoformat(),
             "fecha_salida": self.salida.isoformat(),
@@ -184,6 +205,11 @@ class HotelWorkflowTests(TestCase):
         self.assertEqual(self.habitacion.estado, "OCUPADA")
 
         reserva = Reserva.objects.get(huesped=huesped)
+        self.assertEqual(reserva.estado, "PENDIENTE")
+        self.assertEqual(reserva.pagos.count(), 0)
+        self.client.force_login(self.admin)
+        recepcion = self.client.get("/reservas/")
+        self.assertContains(recepcion, "Pago pendiente")
         cancelar_reserva(reserva.pk)
         self.habitacion.refresh_from_db()
         self.assertEqual(self.habitacion.estado, "DISPONIBLE")
@@ -1219,7 +1245,7 @@ class HotelWorkflowTests(TestCase):
         self.assertNotContains(response, self.habitacion.foto_url)
         self.assertContains(response, 'alt="Habitación 101 - Doble"')
 
-        response = self.client.post("/cliente/reservar/", {
+        response = self.enviar_y_verificar_solicitud({
             "habitacion": self.habitacion.pk,
             "fecha_entrada": self.entrada.isoformat(),
             "fecha_salida": self.salida.isoformat(),
@@ -1272,6 +1298,7 @@ class HotelWorkflowTests(TestCase):
             nombres="Carlos",
             apellidos="Díaz",
             telefono="3001234567",
+            correo="carlos@example.com",
         )
         otra_habitacion = Habitacion.objects.create(
             alojamiento=self.alojamiento,
@@ -1281,7 +1308,7 @@ class HotelWorkflowTests(TestCase):
         )
         self.client.force_login(cliente)
 
-        primera_respuesta = self.client.post("/cliente/reservar/", {
+        primera_respuesta = self.enviar_y_verificar_solicitud({
             "habitacion": self.habitacion.pk,
             "fecha_entrada": self.entrada.isoformat(),
             "fecha_salida": self.salida.isoformat(),
@@ -1301,7 +1328,7 @@ class HotelWorkflowTests(TestCase):
         self.assertContains(doble_reserva, "Ya tienes una reserva")
         self.assertEqual(Reserva.objects.filter(huesped=huesped).count(), 1)
 
-        otra_fecha = self.client.post("/cliente/reservar/", {
+        otra_fecha = self.enviar_y_verificar_solicitud({
             "habitacion": self.habitacion.pk,
             "fecha_entrada": self.salida.isoformat(),
             "fecha_salida": (self.salida + timedelta(days=1)).isoformat(),
@@ -1310,6 +1337,79 @@ class HotelWorkflowTests(TestCase):
         })
         self.assertRedirects(otra_fecha, "/cliente/mis-reservas/")
         self.assertEqual(Reserva.objects.filter(huesped=huesped).count(), 2)
+
+    def test_reservation_code_is_required_and_limited_to_five_attempts(self):
+        cliente = User.objects.create_user(username="cliente-codigo")
+        huesped = Huesped.objects.create(
+            usuario=cliente,
+            tipo_documento="CC",
+            numero_documento="556677",
+            nombres="Lucía",
+            apellidos="Pérez",
+            telefono="3001234567",
+            correo="lucia@example.com",
+        )
+        self.client.force_login(cliente)
+
+        response = self.client.post("/cliente/reservar/", {
+            "habitacion": self.habitacion.pk,
+            "fecha_entrada": self.entrada.isoformat(),
+            "fecha_salida": self.salida.isoformat(),
+            "cantidad_huespedes": 1,
+        })
+        self.assertRedirects(response, "/cliente/reservar/")
+        self.assertFalse(Reserva.objects.filter(huesped=huesped).exists())
+        self.assertEqual(mail.outbox[-1].to, ["lucia@example.com"])
+        self.assertIn("no es un pago", mail.outbox[-1].body)
+
+        for _ in range(5):
+            response = self.client.post(
+                "/cliente/reservar/verificar-correo/",
+                {"codigo": "no-es-valido"},
+            )
+            self.assertRedirects(response, "/cliente/reservar/")
+
+        self.assertFalse(Reserva.objects.filter(huesped=huesped).exists())
+        formulario = self.client.get("/cliente/reservar/")
+        self.assertContains(formulario, "Confirmar solicitud")
+        self.assertNotContains(formulario, "Verificar y enviar solicitud")
+
+    def test_expired_reservation_code_cannot_create_a_reservation(self):
+        cliente = User.objects.create_user(username="cliente-codigo-vencido")
+        huesped = Huesped.objects.create(
+            usuario=cliente,
+            tipo_documento="CC",
+            numero_documento="445566",
+            nombres="Eva",
+            apellidos="Díaz",
+            telefono="3001234567",
+            correo="eva@example.com",
+        )
+        self.client.force_login(cliente)
+        response = self.client.post("/cliente/reservar/", {
+            "habitacion": self.habitacion.pk,
+            "fecha_entrada": self.entrada.isoformat(),
+            "fecha_salida": self.salida.isoformat(),
+            "cantidad_huespedes": 1,
+        })
+        self.assertRedirects(response, "/cliente/reservar/")
+
+        session = self.client.session
+        verificacion = session["reserva_email_verification"]
+        verificacion["expira"] = 0
+        session["reserva_email_verification"] = verificacion
+        session.save()
+        codigo = re.search(
+            r"Tu código de verificación es: (\d{6})",
+            mail.outbox[-1].body,
+        ).group(1)
+
+        response = self.client.post(
+            "/cliente/reservar/verificar-correo/",
+            {"codigo": codigo},
+        )
+        self.assertRedirects(response, "/cliente/reservar/")
+        self.assertFalse(Reserva.objects.filter(huesped=huesped).exists())
 
     def test_customer_can_add_active_services_to_reservation(self):
         cliente = User.objects.create_user(username="cliente-servicios")
@@ -1345,7 +1445,7 @@ class HotelWorkflowTests(TestCase):
             f'min="{date.today().isoformat()}"',
         )
 
-        response = self.client.post("/cliente/reservar/", {
+        response = self.enviar_y_verificar_solicitud({
             "habitacion": self.habitacion.pk,
             "fecha_entrada": self.entrada.isoformat(),
             "fecha_salida": self.salida.isoformat(),

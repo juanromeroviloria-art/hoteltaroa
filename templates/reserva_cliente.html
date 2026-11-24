@@ -22,6 +22,50 @@
             {% endfor %}
         {% endif %}
 
+        {% if verificacion_correo_pendiente %}
+        <div class="formulario-reserva">
+            <p>
+                Enviamos un código a <strong>{{ correo_verificacion }}</strong>.
+                Ingrésalo para enviar tu solicitud a recepción.
+            </p>
+            <p class="ayuda-servicios">
+                Verificar el correo no es un pago. Si se acepta la solicitud,
+                quedará pendiente de pago real.
+            </p>
+            <form method="POST" action="{% url 'reserva_verificar_correo' %}">
+                {% csrf_token %}
+                <div class="campo-login-cliente">
+                    <label for="codigo">Código de verificación</label>
+                    <input type="text"
+                           id="codigo"
+                           name="codigo"
+                           inputmode="numeric"
+                           autocomplete="one-time-code"
+                           pattern="[0-9]{6}"
+                           maxlength="6"
+                           required>
+                </div>
+                <button type="submit"
+                        class="boton-login-cliente boton-confirmar-reserva">
+                    Verificar y enviar solicitud
+                </button>
+            </form>
+            {% if reenviar_disponible %}
+            <form method="POST" action="{% url 'reserva_reenviar_codigo' %}">
+                {% csrf_token %}
+                <button type="submit" class="boton-login-cliente">
+                    Reenviar código
+                </button>
+            </form>
+            {% endif %}
+            <form method="POST" action="{% url 'reserva_cancelar_verificacion' %}">
+                {% csrf_token %}
+                <button type="submit" class="boton-login-cliente">
+                    Cancelar verificación
+                </button>
+            </form>
+        </div>
+        {% else %}
         <form method="POST"
               action="{% url 'reserva_cliente' %}"
               class="formulario-reserva">
@@ -128,6 +172,7 @@
             </button>
 
         </form>
+        {% endif %}
 
         <p class="texto-registro-cliente">
             <a href="{% url 'habitaciones_cliente' %}">
