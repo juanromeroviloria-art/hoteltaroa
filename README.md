@@ -56,7 +56,8 @@ actívala únicamente cuando el dominio ya esté servido correctamente por HTTPS
   servicios, reservas y pagos.
 - Disponibilidad por rango de fechas, capacidad y mantenimiento.
 - Confirmación, check-in y check-out con sincronización del estado de habitación.
-- Servicios asociados a reservas, valor total, pagos parciales y saldo.
+- Abono automático del 50% al confirmar y registro del saldo restante al hacer
+  check-in, además de pagos parciales de servicios y consumos.
 - Solicitudes de cancelación para clientes y decisión desde recepción.
 - Indicadores, filtros y reportes de reservas, ocupación, ingresos, huéspedes y
   servicios vendidos.

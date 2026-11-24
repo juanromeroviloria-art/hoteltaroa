@@ -1105,11 +1105,15 @@ def reserva_cancelar(request, reserva_id):
 @require_POST
 def reserva_confirmar(request, reserva_id):
     try:
-        confirmar_reserva(reserva_id)
+        confirmar_reserva(reserva_id, registrado_por=request.user)
     except (Reserva.DoesNotExist, ValidationError) as error:
         messages.error(request, "; ".join(getattr(error, "messages", [str(error)])))
     else:
-        messages.success(request, "Reserva confirmada.")
+        messages.success(
+            request,
+            "Reserva confirmada. El sistema aplicó automáticamente el abono "
+            "inicial del 50% del total.",
+        )
     return redirect("reservas")
 
 
@@ -1118,11 +1122,15 @@ def reserva_confirmar(request, reserva_id):
 @require_POST
 def reserva_check_in(request, reserva_id):
     try:
-        registrar_check_in(reserva_id)
+        registrar_check_in(reserva_id, registrado_por=request.user)
     except (Reserva.DoesNotExist, ValidationError) as error:
         messages.error(request, "; ".join(getattr(error, "messages", [str(error)])))
     else:
-        messages.success(request, "Check-in registrado correctamente.")
+        messages.success(
+            request,
+            "Check-in registrado. El saldo pendiente, si lo había, se "
+            "registró automáticamente como pagado.",
+        )
     return redirect("reservas")
 
 

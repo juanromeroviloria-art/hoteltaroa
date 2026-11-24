@@ -42,8 +42,12 @@ habitación, y muestra las llegadas de hoy y próximas.
 Puede consultar el catálogo de servicios, pero no crear ni modificar servicios.
 También puede confirmar reservas, agregar servicios y ejecutar check-in/check-out.
 El check-in solo se admite para reservas confirmadas; el check-out requiere un
-check-in previo. Al solicitar o confirmar una reserva, la habitación se bloquea
-como ocupada para evitar otra reserva; al cancelar o finalizar la estadía, queda
+check-in previo. Al confirmar, el sistema registra automáticamente como abono
+el 50% del total de la reserva; al hacer check-in, registra el saldo pendiente.
+Estos son registros internos: no se procesa dinero ni se verifica un pago con
+una pasarela, por lo que recepción debe haber recibido el pago antes de ejecutar
+cada acción. Al solicitar o confirmar una reserva, la habitación se bloquea como
+ocupada para evitar otra reserva; al cancelar o finalizar la estadía, queda
 disponible. No tiene acceso a la administración de usuarios, roles, habitaciones
 ni a la configuración del hotel.
 
@@ -93,7 +97,7 @@ de habitaciones diferentes; sí puede reservar periodos separados o contiguos.
 Los pagos aceptan abonos y no pueden superar el saldo pendiente. El total de una
 reserva incluye el alojamiento por noche, los servicios asociados y los cargos
 registrados por restaurante, bar y lavandería. Después del check-out, recepción
-puede consultar e imprimir la factura detallada, registrar el pago del saldo y
+puede consultar e imprimir la factura detallada, registrar pagos adicionales y
 ver el total pagado. Los reportes también contabilizan los consumos cargados.
 
 ## Reportes

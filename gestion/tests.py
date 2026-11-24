@@ -32,6 +32,7 @@ from .models import (
 )
 from .operations import (
     cancelar_reserva,
+    confirmar_reserva,
     registrar_check_in,
     registrar_check_out,
 )
@@ -223,6 +224,10 @@ class HotelWorkflowTests(TestCase):
         self.assertRedirects(response, "/reservas/")
         reserva.refresh_from_db()
         self.assertEqual(reserva.estado, "CONFIRMADA")
+        abono = Pago.objects.get(reserva=reserva)
+        self.assertEqual(abono.valor, Decimal("100000.00"))
+        self.assertEqual(abono.metodo, "Abono automático")
+        self.assertEqual(abono.registrado_por, receptionist)
 
         response = self.client.get(f"/reservas/{reserva.pk}/servicios/")
         self.assertEqual(response.status_code, 200)
@@ -249,12 +254,18 @@ class HotelWorkflowTests(TestCase):
         self.habitacion.refresh_from_db()
         self.assertEqual(reserva.estado, "EN_CURSO")
         self.assertEqual(self.habitacion.estado, "OCUPADA")
+        saldo_automatico = Pago.objects.get(
+            reserva=reserva,
+            metodo="Saldo automático",
+        )
+        self.assertEqual(saldo_automatico.valor, Decimal("70000.00"))
+        self.assertEqual(saldo_automatico.registrado_por, receptionist)
 
         self.client.post(f"/reservas/{reserva.pk}/check-out/")
         reserva.refresh_from_db()
         self.habitacion.refresh_from_db()
         self.assertEqual(reserva.estado, "FINALIZADA")
-        self.assertEqual(reserva.saldo_pendiente, Decimal("170000.00"))
+        self.assertEqual(reserva.saldo_pendiente, Decimal("0.00"))
         self.assertEqual(self.habitacion.estado, "DISPONIBLE")
 
     def test_services_and_partial_payments_calculate_balance(self):
@@ -304,7 +315,8 @@ class HotelWorkflowTests(TestCase):
         self.assertEqual(reserva.saldo_pendiente, Decimal("0.00"))
 
     def test_department_consumptions_are_added_to_checkout_invoice_and_payment(self):
-        reserva = self.crear_reserva(estado="CONFIRMADA")
+        reserva = self.crear_reserva()
+        confirmar_reserva(reserva.pk)
         registrar_check_in(reserva.pk)
         productos = {
             "Bar": Servicio.objects.create(
@@ -378,14 +390,17 @@ class HotelWorkflowTests(TestCase):
                         1,
                     )
                     self.assertEqual(
-                        Pago.objects.filter(reserva=reserva).count(),
+                        Pago.objects.filter(
+                            reserva=reserva,
+                            consumo__isnull=False,
+                        ).count(),
                         1,
                     )
 
         reserva.refresh_from_db()
         self.assertEqual(reserva.valor_total, Decimal("247000.00"))
-        self.assertEqual(reserva.valor_pagado, Decimal("47000.00"))
-        self.assertEqual(reserva.saldo_pendiente, Decimal("200000.00"))
+        self.assertEqual(reserva.valor_pagado, Decimal("247000.00"))
+        self.assertEqual(reserva.saldo_pendiente, Decimal("0.00"))
 
         receptionist_role, _ = Rol.objects.get_or_create(
             nombre="Recepcionista"
@@ -426,25 +441,6 @@ class HotelWorkflowTests(TestCase):
         ):
             self.assertContains(pagos, empleado.username)
 
-        response = self.client.get(
-            f"/pagos/crear/?reserva={reserva.pk}"
-        )
-        self.assertEqual(response.status_code, 200)
-        response = self.client.post("/pagos/crear/", {
-            "reserva": reserva.pk,
-            "valor": "200000.00",
-            "metodo": "Tarjeta",
-            "referencia": "CHECKOUT-1",
-        })
-        self.assertRedirects(
-            response,
-            f"/reservas/{reserva.pk}/factura/",
-        )
-        pago_checkout = Pago.objects.get(
-            reserva=reserva,
-            referencia="CHECKOUT-1",
-        )
-        self.assertEqual(pago_checkout.registrado_por, receptionist)
         response = self.client.get(f"/reservas/{reserva.pk}/factura/")
         self.assertContains(response, "Cuenta pagada")
         reserva.refresh_from_db()

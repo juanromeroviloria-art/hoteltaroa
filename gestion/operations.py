@@ -1,8 +1,10 @@
+from decimal import Decimal, ROUND_HALF_UP
+
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Habitacion, Reserva
+from .models import Habitacion, Pago, Reserva
 
 
 def sincronizar_estado_habitacion(habitacion_id):
@@ -22,7 +24,7 @@ def sincronizar_estado_habitacion(habitacion_id):
 
 
 @transaction.atomic
-def confirmar_reserva(reserva_id):
+def confirmar_reserva(reserva_id, registrado_por=None):
     reserva = Reserva.objects.select_for_update().select_related(
         "habitacion"
     ).get(pk=reserva_id)
@@ -30,6 +32,23 @@ def confirmar_reserva(reserva_id):
         raise ValidationError("Solo se pueden confirmar reservas pendientes.")
     if reserva.habitacion.estado == "MANTENIMIENTO":
         raise ValidationError("La habitación está en mantenimiento.")
+
+    abono_objetivo = (
+        Decimal(str(reserva.valor_total)) / Decimal("2")
+    ).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    abono = max(
+        abono_objetivo - Decimal(str(reserva.valor_pagado)),
+        Decimal("0.00"),
+    )
+    if abono:
+        Pago.objects.create(
+            reserva=reserva,
+            valor=abono,
+            metodo="Abono automático",
+            referencia="Abono del 50% al confirmar la reserva",
+            registrado_por=registrado_por,
+        )
+
     reserva.estado = "CONFIRMADA"
     reserva.save(update_fields=["estado"])
     sincronizar_estado_habitacion(reserva.habitacion_id)
@@ -50,7 +69,7 @@ def cancelar_reserva(reserva_id):
 
 
 @transaction.atomic
-def registrar_check_in(reserva_id):
+def registrar_check_in(reserva_id, registrado_por=None):
     reserva = Reserva.objects.select_for_update().select_related(
         "habitacion"
     ).get(pk=reserva_id)
@@ -64,6 +83,18 @@ def registrar_check_in(reserva_id):
         )
     if reserva.habitacion.estado == "MANTENIMIENTO":
         raise ValidationError("La habitación está en mantenimiento.")
+
+    saldo_pendiente = Decimal(str(reserva.saldo_pendiente)).quantize(
+        Decimal("0.01")
+    )
+    if saldo_pendiente:
+        Pago.objects.create(
+            reserva=reserva,
+            valor=saldo_pendiente,
+            metodo="Saldo automático",
+            referencia="Saldo restante al hacer check-in",
+            registrado_por=registrado_por,
+        )
 
     reserva.estado = "EN_CURSO"
     reserva.fecha_check_in = timezone.now()
